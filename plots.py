@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
 
 def plots(orig, mixed, unmixed, rmse, name, th=1 ,th1=1.7):
     plt.style.use('seaborn')
@@ -32,21 +33,27 @@ def plots(orig, mixed, unmixed, rmse, name, th=1 ,th1=1.7):
 
 def swap_lines(object,fr, on):
     '''Swap n and m lines . For some algorithms'''
-    temp = np.copy(object)
+    temp = copy.deepcopy(object)
     object[fr] = temp[on]
     object[on] = temp[fr]
     return object
 
-def swap(JU, JU_s, icaa_audio, icaa):
+def swap(JU, JU_s, icaa_audio, icaa,pcaa):
     """Swapping line after unmixing for correct display on plots"""
-    swap_lines(JU, 0, 1)
+    #swap_lines(JU, 0, 1)
     swap_lines(JU_s, 0, 1)
-    swap_lines(icaa_audio, 0, 2)
-    swap_lines(icaa_audio, 0, 1)
+    swap_lines(icaa_audio, 1, 0)
+    #swap_lines(icaa, 0, 2)
+    #swap_lines(icaa_audio, 0, 2)
     '''Mirroring '''
     JU[1] *= -1
-    JU[2] *= -1
+    #JU[0] *= -1
     JU_s[1] *= -1
-    JU_s[2] *= -1
-    icaa_audio[2] *= -1
-    icaa[2] *= -1
+    #JU_s[2] *= -1
+    icaa_audio[0] *= -1
+    icaa_audio[1] *= -1
+    #icaa[2] *= -1
+    icaa[1] *= -1
+    icaa[0] *= -1
+    pcaa[0] *= -1
+    #pcaa[2] *= -1

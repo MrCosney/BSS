@@ -8,6 +8,10 @@ def exctract():
     audio_1 = "Audio/Original/Kunkka.wav"
     audio_2 = "Audio/Original/Ench.wav"
     audio_3 = "Audio/Original/Timber.wav"
+
+    #audio_1 = "Audio/Original/piano.wav"
+    #audio_2 = "Audio/Original/drum.wav"
+    #audio_3 = "Audio/Original/guitar.wav"
     '''Extract data from wav. files'''
     rate1, data1 = load_wav(audio_1, freq)
     rate2, data2 = load_wav(audio_2, freq)

@@ -9,7 +9,7 @@ def normalization(s):
         s = ((np.float64(s) - np.float64(min(s))) * 2) / (np.float64(np.max(s)) - np.float64(min(s))) - 1
     return s
 
-def rmse(original, unmixed):
+def rmse(original, unmixed, name):
     '''Return the array with RMSE for each source signal'''
     #Compute max length of the vector and resize others with it for coreect RMSE calculation
     temp = np.copy(original)
@@ -28,4 +28,8 @@ def rmse(original, unmixed):
     for i in range(unmixed.shape[0]):
         rmse.append(np.sqrt(mean_squared_error(temp[i], unmixed[i])))
     rmse = np.array(rmse)
+
+    file_1 = open(name, "w")
+    file_1.write(str(np.mean(rmse)))
+    file_1.close()
     return rmse
