@@ -9,7 +9,7 @@ def normalization(s):
         s = ((np.float64(s) - np.float64(min(s))) * 2) / (np.float64(np.max(s)) - np.float64(min(s))) - 1
     return s
 
-def rmse(original, unmixed, name):
+def rmse(original, unmixed):
     '''Return the array with RMSE for each source signal'''
     #Compute max length of the vector and resize others with it for coreect RMSE calculation
     temp = np.copy(original)
@@ -24,12 +24,17 @@ def rmse(original, unmixed, name):
     for i in range(unmixed.shape[0]):
         temp[i] = np.resize(temp[i], (length, ))
         unmixed[i] = np.resize(temp_u[i], (length, ))
-    rmse = []
-    for i in range(unmixed.shape[0]):
-        rmse.append(np.sqrt(mean_squared_error(temp[i], unmixed[i])))
-    rmse = np.array(rmse)
 
-    file_1 = open(name, "w")
-    file_1.write(str(np.mean(rmse)))
-    file_1.close()
-    return rmse
+    #find all possible options for RMSE
+    rmse_t = []
+    for i in range(unmixed.shape[0]):
+        for k in range(unmixed.shape[0]):
+            rmse_t.append(np.sqrt(mean_squared_error(temp[i], unmixed[k])))
+        for z in range(unmixed.shape[0]):
+            rmse_t.append(np.sqrt(mean_squared_error(temp[i], unmixed[z] * -1)))
+    # calculate RMSE of algorithm
+    rms = []
+    for i in range(unmixed.shape[0]):
+        rms.append(rmse_t.pop(rmse_t.index(min(rmse_t))))
+    rmse = np.mean(rms)
+    return np.round(rmse, 4)

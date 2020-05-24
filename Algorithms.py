@@ -32,30 +32,30 @@ def mix(data):
     return mixed
 
 
-def jade_unmix(mix_audio):
+def jade_unmix(mix_audio: np.array, state: dict, options):
     mixed_signals = RealFeatures(mix_audio.astype(np.float64))
     jade = Jade()
     signals = jade.apply(mixed_signals)
     JUnmixAudio = signals.get_feature_matrix()
     Mix_matrix = jade.get_mixing_matrix()
     Mix_matrix / Mix_matrix.sum(axis=0)
-    print("Estimated Mixing Matrix is: ")
-    print(Mix_matrix)
-    return JUnmixAudio
+    state = Mix_matrix
+    return JUnmixAudio, state
 
-def Pca(mix_audio):
+def Pca(mix_audio, state: dict, options):
+    mix_audio = mix_audio.T
     pca = PCA(n_components=mix_audio.shape[1])
     unmix = pca.fit_transform(mix_audio)
-    return unmix.T
+    return unmix.T, state
 
-def Fast(mix_audio):
+def Fast(mix_audio: np.array, state: dict, options):
+    mix_audio = mix_audio.T
     ica = FastICA(n_components=mix_audio.shape[1])
     S_ = ica.fit_transform(mix_audio)
     Mix_matrix = ica.mixing_
     # Mix_matrix / Mix_matrix.sum(axis=0)
-    print("Estimated Mixing Matrix is: ")
-    print(Mix_matrix)
-    return S_.T
+    state = Mix_matrix
+    return S_.T, state
 
 def convergence_callback(Y):
     ref = np.moveaxis(separate_recordings, 1, 2)

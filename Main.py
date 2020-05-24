@@ -9,7 +9,8 @@ import copy
 
 
 def main():
-    rate, source_data, source_sig = exctract()
+    rate = 44100
+    source_data, source_sig = exctract()
     '''Normalize input data'''
     normalization(source_data)
     '''Mixing input data'''
@@ -21,14 +22,14 @@ def main():
     #mix_room_audio = mix(copy.deepcopy(source_data))
     mix_signals = mix(copy.deepcopy(source_sig))
     '''Make Unmixing by Jade Algorithm'''
-    JU = jade_unmix(mix_room_audio)
-    JU_s = jade_unmix(mix_signals)
+    JU = jade_unmix(mix_room_audio, 1 ,1)
+    JU_s = jade_unmix(mix_signals, 1 ,1)
     '''Make Unmixing by ICAA Algorithm'''
-    icaa = Fast(mix_signals.T)
-    icaa_audio = Fast(mix_room_audio.T)
+    icaa = Fast(mix_signals.T, 1 ,1 )
+    icaa_audio = Fast(mix_room_audio.T, 1 , 1 )
     '''Make Unmixing by PCA'''
-    pcaa = Pca(mix_signals.T)
-    pcaa_audio = Pca(mix_room_audio.T)
+    #pcaa = Pca(mix_signals.T, 1 ,1)
+    pcaa_audio = Pca(mix_room_audio.T, 1 ,1)
     '''Make Unmixing by Shuller Algorithm'''
     Shuller = shullers_method(mix_audio.T)
     Shuller_sig = shullers_method(mix_signal_sh.T)

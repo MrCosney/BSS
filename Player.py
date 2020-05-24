@@ -33,4 +33,4 @@ def load_wav(filename, samplerate=44100):
     ratio = float(samplerate) / float(rate)
     data = resample(data, int(len(data) * ratio))
 
-    return samplerate, data
+    return data

@@ -156,7 +156,8 @@ def playsound(audio, samplingRate, channels):
     return
 
 
-def shullers_method(data):
+def shullers_method(mix_audio: np.array, state: dict, options):
+    data = mix_audio.T
     sources = data * 1.0 / 2 ** 15
     sources *= 0.5
 
@@ -193,4 +194,4 @@ def shullers_method(data):
 
     # playsound(X_del[:, 0] * 2 ** 15, samplerate, 1)
     # playsound(X_del[:, 1] * 2 ** 15, samplerate, 1)
-    return X_del.T
+    return X_del.T, coeffs
