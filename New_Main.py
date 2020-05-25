@@ -4,46 +4,55 @@ from Player import *
 from setups import setups
 from Algorithms import mix
 from Normalizer import *
-from Room import *
+from MakeRoom import *
 import copy
 import sys
 
 
 def main():
-    sims, data_sets, algs = setups()
-    results = []
+    sims, data_sets = setups()
     # choose sim type
     for sim in sims:
         mix_type = sim['mixture_type']
         sim_name = sim['name']
+        mics = sim['microphones']
         # choose data set
-        for sets in data_sets:
+        for sets in sim['data_sets']:
             X = []
             for wav in sets['data']:
-                X.append(load_wav(wav, sets['freq']))
+                if len(X) == mics:
+                    break
+                if type(wav) == str:
+                    X.append(load_wav(wav, sets['freq']))
+                else:
+                    X.append(wav)
             X = normalization(np.array(X))
+            # choose mix type
+            mix_data = sim['mix_data']
+            if mix_type == 'linear':
+                sim['Mix_data'] = mix(copy.deepcopy(X))             #can be removed?
+                mix_data.update({sets['type']: mix(copy.deepcopy(X))})
+            elif mix_type == 'room':
+                a =1
+                #alg['Mix_data'] = makeroom(sets['freq'], copy.deepcopy(X), alg['options'])
+            else:
+                print("Error: Simulation is chosen wrong.")
+                sys.exit()
+            sim['Mix_data'] = normalization(sim['Mix_data'])
             # Run algorithms
-            for alg in algs:
+            for alg in sim['algs']:
+                metrics = alg['Metrics']
                 print("Running " + alg['name'] + " ...")
                 # choose mix type
-                if mix_type == 'linear':
-                    alg['Mix'] = mix(copy.deepcopy(X[:alg['microphones']]))
-                elif mix_type == 'room':
-                    alg['Mix'] = makeroom(sets['freq'], copy.deepcopy(X[:alg['microphones']]))
-                else:
-                    print("Error: Simulation is chosen wrong.")
-                    sys.exit()
-                alg['Mix'] = normalization(alg['Mix'])
                 if 'options' in alg:
                     opt = alg['options']
                 else:
                     opt = None
-                alg['Unmix'], alg['state'] = alg['func'](alg['Mix'], alg['state'], opt)
+                alg['Unmix'], alg['state'] = alg['func'](sim['Mix_data'], alg['state'], opt)
                 alg['Unmix'] = normalization(alg['Unmix'])
-                alg['Metrics' + sim_name] = evaluate(X, alg['Unmix'])
-                #results[alg['name']] = alg
-            res = {sim_name + sets['type']: algs}
-            results.append(copy.deepcopy(res))
+                metrics.update({sets['type']: evaluate(X, alg['Unmix'])})
+            #delete temp Mix_data form dict
+            del sim['Mix_data']
 
 
 def evaluate(X, S):

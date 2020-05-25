@@ -32,7 +32,7 @@ def mix(data):
     return mixed
 
 
-def jade_unmix(mix_audio: np.array, state: dict, options):
+def jade_unmix(mix_audio: np.array, state: dict, options: dict):
     mixed_signals = RealFeatures(mix_audio.astype(np.float64))
     jade = Jade()
     signals = jade.apply(mixed_signals)
@@ -42,13 +42,13 @@ def jade_unmix(mix_audio: np.array, state: dict, options):
     state = Mix_matrix
     return JUnmixAudio, state
 
-def Pca(mix_audio, state: dict, options):
+def Pca(mix_audio, state: dict, options: dict):
     mix_audio = mix_audio.T
     pca = PCA(n_components=mix_audio.shape[1])
     unmix = pca.fit_transform(mix_audio)
     return unmix.T, state
 
-def Fast(mix_audio: np.array, state: dict, options):
+def Fast(mix_audio: np.array, state: dict, options: dict):
     mix_audio = mix_audio.T
     ica = FastICA(n_components=mix_audio.shape[1])
     S_ = ica.fit_transform(mix_audio)

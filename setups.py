@@ -1,18 +1,12 @@
 from Algorithms import *
 from Olegs import shullers_method
+from scipy import signal
+
 
 def setups():
-    sims = [
-        {
-            'name': 'Linear',
-            'mixture_type': 'linear'
-        },
-        {
-            'name': 'Convolutive',
-            'mixture_type': 'room'
-        }
-    ]
-
+    np.random.seed(0)
+    n_samples = 10000
+    time = np.linspace(0, 8, n_samples)
     data_sets = [
         {
             'type': 'Voice',
@@ -31,51 +25,83 @@ def setups():
                 "Audio/Original/drum.wav",
                 "Audio/Original/guitar.wav"
             ]
+        },
+        {
+            'type': 'Gen Signals',
+            'freq': 44100,
+            'data': [
+                np.sin(2 * time),
+                np.sign(np.sin(3 * time)),
+                signal.sawtooth(2 * np.pi * time)
+            ]
         }
     ]
 
-    algs = [
-            {
-                'name': 'JADE_2',
-                'func': jade_unmix,
-                'microphones': 2,
-                'state': {}
-            },
-            {
-                'name': 'JADE_3',
-                'func': jade_unmix,
-                'microphones': 3,
-                'state': {}
-            },
-            {
-                'name': 'PCA_2',
-                'func': Pca,
-                'microphones': 2,
-                'state': {}
-            },
-            {
-                'name': 'PCA_3',
-                'func': Pca,
-                'microphones': 3,
-                'state': {}
-            },
-            {
-                'name': 'ICAA_2',
-                'func': Fast,
-                'microphones': 2,
-                'state': {}
-            },
-            {
-                'name': 'ICAA_3',
-                'func': Fast,
-                'microphones': 3,
-                'state': {}
-            },
-            {
-                'name': 'AIRES',
-                'func': shullers_method,
-                'microphones': 2,
-                'state': {}
-            }
-        ]
-    return sims, data_sets, algs
+    sims = [
+        {
+            'name': 'Linear_2',
+            'mixture_type': 'linear',
+            'microphones': 2,
+            'data_sets': data_sets,
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_2',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_2',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_2',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AIRES',
+                    'func': shullers_method,
+                    'state': {},
+                    'Metrics': {}
+                }
+            ]
+        },
+                        #Linear for 3 microphones
+        {
+            'name': 'Linear_3',
+            'mixture_type': 'linear',
+            'microphones': 3,
+            'data_sets': data_sets,
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_3',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_3',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_3',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+            ]
+        },
+        {
+            'name': 'Convolutive',
+            'mixture_type': 'room'
+        }
+    ]
+    return sims, data_sets
