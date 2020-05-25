@@ -33,8 +33,8 @@ def main():
                 sim['Mix_data'] = mix(copy.deepcopy(X))             #can be removed?
                 mix_data.update({sets['type']: mix(copy.deepcopy(X))})
             elif mix_type == 'room':
-                a =1
-                #alg['Mix_data'] = makeroom(sets['freq'], copy.deepcopy(X), alg['options'])
+                sim['Mix_data'], sim['Room_shape'] = makeroom(sets['freq'], copy.deepcopy(X), sim['options'])
+                mix_data.update({sets['type']: mix(copy.deepcopy(X))})
             else:
                 print("Error: Simulation is chosen wrong.")
                 sys.exit()

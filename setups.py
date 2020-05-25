@@ -99,9 +99,40 @@ def setups():
                 },
             ]
         },
+            # Convolutive for 2 microphones
         {
-            'name': 'Convolutive',
-            'mixture_type': 'room'
+            'name': 'Convolutive_2_1',
+            'mixture_type': 'room',
+            'microphones': 2,
+            'data_sets': data_sets,
+            'options': {'absorp': 0.35, 'orders': 15, 'awgn': 0},
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_2',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_2',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_2',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AIRES',
+                    'func': shullers_method,
+                    'state': {},
+                    'Metrics': {}
+                }
+            ]
         }
     ]
     return sims, data_sets
