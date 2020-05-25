@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import mean_squared_error
+import copy
 
 def normalization(s):
     if s.shape[0] < 7:
@@ -12,29 +13,32 @@ def normalization(s):
 def rmse(original, unmixed):
     '''Return the array with RMSE for each source signal'''
     #Compute max length of the vector and resize others with it for coreect RMSE calculation
-    temp = np.copy(original)
-    temp_u = np.copy(unmixed)
+    sources = original.shape[0]
+    mics = unmixed.shape[0]
     length = 0
-    for i in range(unmixed.shape[0]):
-        if len(temp[i]) > length:
-            length = len(temp[i])
+    for i in range(mics):
+        if len(original[i]) > length:
+            length = len(original[i])
         if len(unmixed[i]) > length:
             length = len(unmixed[i])
 
-    for i in range(unmixed.shape[0]):
-        temp[i] = np.resize(temp[i], (length, ))
-        unmixed[i] = np.resize(temp_u[i], (length, ))
+    #pad zeroes to make both equal
+    orig_t = np.zeros((sources, length))
+    unmixed_t = np.zeros((mics, length))
+    for i in range(mics):
+        orig_t[i][:original[i].shape[0]] = original[i]
+        unmixed_t[i][:unmixed[i].shape[0]] = unmixed[i]
 
     #find all possible options for RMSE
     rmse_t = []
-    for i in range(unmixed.shape[0]):
-        for k in range(unmixed.shape[0]):
-            rmse_t.append(np.sqrt(mean_squared_error(temp[i], unmixed[k])))
-        for z in range(unmixed.shape[0]):
-            rmse_t.append(np.sqrt(mean_squared_error(temp[i], unmixed[z] * -1)))
+    for i in range(mics):
+        for k in range(mics):
+            rmse_t.append(np.sqrt(mean_squared_error(orig_t[i], unmixed_t[k])))
+        for z in range(mics):
+            rmse_t.append(np.sqrt(mean_squared_error(orig_t[i], unmixed_t[z] * -1)))
     # calculate RMSE of algorithm
     rms = []
-    for i in range(unmixed.shape[0]):
+    for i in range(mics):
         rms.append(rmse_t.pop(rmse_t.index(min(rmse_t))))
     rmse = np.mean(rms)
     return np.round(rmse, 4)

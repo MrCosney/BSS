@@ -41,8 +41,11 @@ def main():
             sim['Mix_data'] = normalization(sim['Mix_data'])
             # Run algorithms
             for alg in sim['algs']:
+
+                if sim_name == 'Convolutive_2_5' and alg['name'] == 'AUXIVA_4096':
+                    a = 1
                 metrics = alg['Metrics']
-                print("Running " + alg['name'] + " ...")
+                print("Running " + alg['name'] + " in " + sim_name + "....")
                 # choose mix type
                 if 'options' in alg:
                     opt = alg['options']
@@ -50,10 +53,10 @@ def main():
                     opt = None
                 alg['Unmix'], alg['state'] = alg['func'](sim['Mix_data'], alg['state'], opt)
                 alg['Unmix'] = normalization(alg['Unmix'])
-                metrics.update({sets['type']: evaluate(X, alg['Unmix'])})
+                metrics.update({sets['type']: evaluate(copy.deepcopy(X), copy.deepcopy(alg['Unmix']))})
             #delete temp Mix_data form dict
             del sim['Mix_data']
-
+    a = 1
 
 def evaluate(X, S):
     SDR = 1

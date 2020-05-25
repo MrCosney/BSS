@@ -68,6 +68,34 @@ def setups():
                     'func': shullers_method,
                     'state': {},
                     'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
                 }
             ]
         },
@@ -97,15 +125,43 @@ def setups():
                     'state': {},
                     'Metrics': {}
                 },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                }
             ]
         },
-            # Convolutive for 2 microphones
+            # Convolutive for 2 microphones absorp: 0.35, orders: 0, awgn: 0
         {
-            'name': 'Convolutive_2_1',
+            'name': 'Convolutive_2_0',
             'mixture_type': 'room',
             'microphones': 2,
             'data_sets': data_sets,
-            'options': {'absorp': 0.35, 'orders': 15, 'awgn': 0},
+            'options': {'absorp': 0.35, 'orders': 0, 'awgn': 0},
             'mix_data': {},
             'algs': [
                 {
@@ -130,6 +186,349 @@ def setups():
                     'name': 'AIRES',
                     'func': shullers_method,
                     'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                }
+            ]
+        },
+            # Convolutive for 2 microphones absorp: 0.35, orders: 7, awgn: 0
+        {
+            'name': 'Convolutive_2_7',
+            'mixture_type': 'room',
+            'microphones': 2,
+            'data_sets': data_sets,
+            'options': {'absorp': 0.35, 'orders': 7, 'awgn': 0},
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_2',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_2',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_2',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AIRES',
+                    'func': shullers_method,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                }
+            ]
+        },
+            # Convolutive for 2 microphones absorp: 0.35, orders: 7, awgn: 1e-8
+        {
+            'name': 'Convolutive_2_7_n',
+            'mixture_type': 'room',
+            'microphones': 2,
+            'data_sets': data_sets,
+            'options': {'absorp': 0.35, 'orders': 7, 'awgn': 1e-8},
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_2',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_2',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_2',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AIRES',
+                    'func': shullers_method,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                }
+            ]
+        },
+            # Convolutive for 3 microphones absorp: 0.35, orders: 0, awgn: 0
+        {
+            'name': 'Convolutive_3_0',
+            'mixture_type': 'room',
+            'microphones': 3,
+            'data_sets': data_sets,
+            'options': {'absorp': 0.35, 'orders': 0, 'awgn': 0},
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_2',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_2',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_2',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AIRES',
+                    'func': shullers_method,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                }
+            ]
+        },
+            # Convolutive for 3 microphones absorp: 0.35, orders: 7, awgn: 0
+        {
+            'name': 'Convolutive_3_7',
+            'mixture_type': 'room',
+            'microphones': 3,
+            'data_sets': data_sets,
+            'options': {'absorp': 0.35, 'orders': 7, 'awgn': 0},
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_2',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_2',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_2',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AIRES',
+                    'func': shullers_method,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                }
+            ]
+        },
+            # Convolutive for 3 microphones absorp: 0.35, orders: 7, awgn: 0
+        {
+            'name': 'Convolutive_3_7_n',
+            'mixture_type': 'room',
+            'microphones': 3,
+            'data_sets': data_sets,
+            'options': {'absorp': 0.35, 'orders': 7, 'awgn': 1e-8},
+            'mix_data': {},
+            'algs': [
+                {
+                    'name': 'JADE_2',
+                    'func': jade_unmix,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'PCA_2',
+                    'func': Pca,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ICAA_2',
+                    'func': Fast,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AIRES',
+                    'func': shullers_method,
+                    'state': {},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_512',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_512',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'ILRMA_2048',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 2048},
                     'Metrics': {}
                 }
             ]
