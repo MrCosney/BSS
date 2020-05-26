@@ -54,6 +54,9 @@ def main():
                     opt = None
                 alg['Unmix'], alg['state'] = alg['func'](sim['Mix_data'], alg['state'], opt)
                 alg['Unmix'] = normalization(alg['Unmix'])
+                if alg['name'] == 'AIRES' and sim['name'] == 'Convolutive_2_7':
+                    play(alg['Unmix'][0] * 15000)
+                    play(alg['Unmix'][1] * 15000)
                 metrics.update({sets['type']: evaluate(copy.deepcopy(X), copy.deepcopy(alg['Unmix']))})
             #delete temp Mix_data form dict
             del sim['Mix_data']
