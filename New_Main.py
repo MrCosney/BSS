@@ -7,6 +7,7 @@ from Normalizer import *
 from MakeRoom import *
 import copy
 import sys
+from pprint import pprint
 
 
 def main():
@@ -42,8 +43,8 @@ def main():
             # Run algorithms
             for alg in sim['algs']:
 
-                if sim_name == 'Convolutive_2_5' and alg['name'] == 'AUXIVA_4096':
-                    a = 1
+                if alg['name'].find('ILRMA') == 0 and sets['type'] == 'Gen Signals':
+                    continue
                 metrics = alg['Metrics']
                 print("Running " + alg['name'] + " in " + sim_name + "....")
                 # choose mix type
@@ -56,7 +57,23 @@ def main():
                 metrics.update({sets['type']: evaluate(copy.deepcopy(X), copy.deepcopy(alg['Unmix']))})
             #delete temp Mix_data form dict
             del sim['Mix_data']
-    a = 1
+
+    #Collect all metrics into new dictionary and display in in console with correct view =)
+    results = {}
+    for sim in sims:
+        dic = {sim['name']: {}}
+        dic2 = dic[sim['name']]
+        for alg in sim['algs']:
+            dic2.update({alg['name']: alg['Metrics']})
+        results.update(dic)
+    print("______________________________")
+    for key, value in results.items():
+        print("{0} :".format(key))
+        for alg, data in value.items():
+            print("\t{0} :".format(alg))
+            for audio_type, metrics in data.items():
+                print("\t\t{0}: {1}".format(audio_type, metrics))
+    print("______________________________")
 
 def evaluate(X, S):
     SDR = 1

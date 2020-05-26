@@ -32,14 +32,14 @@ def makeroom(fs, data):
     ax.set_zlim([0, 3.5])
 
     plt.savefig("Fig/Room Visualization.jpeg")
-    #plt.show()
+    plt.show()
     room.compute_rir()
     '''Plot the sim room with reflections'''
     room.image_source_model(use_libroom=True)
     fig, ax = room.plot(img_order=3)
     fig.set_size_inches(10, 6, 3)
     plt.savefig("Fig/Room Reflection.jpeg")
-    #plt.show()
+    plt.show()
     '''Plot Impulse Response of the Room'''
     room.plot_rir()
     fig = plt.gcf()

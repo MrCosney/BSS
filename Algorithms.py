@@ -97,9 +97,11 @@ def ILRMA(mix_audio: np.array, state: dict, options: dict):
     X = np.moveaxis(X, 0, 2)
 
     # SDR, SIR = [], []
-    Y, W = pra.bss.ilrma(X, n_iter=20, proj_back=False, return_filters=True)  # callback=convergence_callback  check for callback
-    unmix = np.array([pra.istft(Y[:, :, ch], L, L, transform=np.fft.irfft, zp_front=L // 2, zp_back=L // 2) for ch in
-                      range(Y.shape[2])])
+    #TODO: for signals inverse does not exist because determinant of zero
+
+    Y = pra.bss.ilrma(X, n_iter=20, proj_back=True)  # callback=convergence_callback  check for callback
+    unmix = np.array([pra.istft(Y[:, :, ch], L, L, transform=np.fft.irfft, zp_front=L // 2, zp_back=L // 2) for ch in range(Y.shape[2])])
+
     # TODO: STFT For filter state (W) and add to state
     # sdr, isr, sir, sar, perm = bss_eval_images(ref[:, :y.shape[1] - L // 2, 0], y[:, L // 2:ref.shape[1] + L // 2])
     return unmix, state

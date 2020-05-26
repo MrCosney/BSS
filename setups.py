@@ -5,7 +5,7 @@ from scipy import signal
 
 def setups():
     np.random.seed(0)
-    n_samples = 10000
+    n_samples = 20000
     time = np.linspace(0, 8, n_samples)
     data_sets = [
         {
@@ -46,19 +46,19 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_2',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_2',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'ICAA_2',
+                    'name': 'ICAA',
                     'func': Fast,
                     'state': {},
                     'Metrics': {}
@@ -77,6 +77,13 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'AUXIVA_2048',
                     'func': auxvia,
                     'state': {},
@@ -91,8 +98,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
@@ -108,13 +122,13 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_3',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_3',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
@@ -133,6 +147,13 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'AUXIVA_2048',
                     'func': auxvia,
                     'state': {},
@@ -147,8 +168,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
@@ -165,19 +193,19 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_2',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_2',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'ICAA_2',
+                    'name': 'ICAA',
                     'func': Fast,
                     'state': {},
                     'Metrics': {}
@@ -196,6 +224,13 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'AUXIVA_2048',
                     'func': auxvia,
                     'state': {},
@@ -210,8 +245,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
@@ -228,19 +270,19 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_2',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_2',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'ICAA_2',
+                    'name': 'ICAA',
                     'func': Fast,
                     'state': {},
                     'Metrics': {}
@@ -259,6 +301,13 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'AUXIVA_2048',
                     'func': auxvia,
                     'state': {},
@@ -273,8 +322,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
@@ -291,19 +347,19 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_2',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_2',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'ICAA_2',
+                    'name': 'ICAA',
                     'func': Fast,
                     'state': {},
                     'Metrics': {}
@@ -322,6 +378,13 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'AUXIVA_2048',
                     'func': auxvia,
                     'state': {},
@@ -336,8 +399,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
@@ -354,26 +424,20 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_2',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_2',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'ICAA_2',
+                    'name': 'ICAA',
                     'func': Fast,
-                    'state': {},
-                    'Metrics': {}
-                },
-                {
-                    'name': 'AIRES',
-                    'func': shullers_method,
                     'state': {},
                     'Metrics': {}
                 },
@@ -382,6 +446,13 @@ def setups():
                     'func': auxvia,
                     'state': {},
                     'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
                     'Metrics': {}
                 },
                 {
@@ -399,8 +470,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
@@ -417,26 +495,20 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_2',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_2',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'ICAA_2',
+                    'name': 'ICAA',
                     'func': Fast,
-                    'state': {},
-                    'Metrics': {}
-                },
-                {
-                    'name': 'AIRES',
-                    'func': shullers_method,
                     'state': {},
                     'Metrics': {}
                 },
@@ -445,6 +517,13 @@ def setups():
                     'func': auxvia,
                     'state': {},
                     'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
                     'Metrics': {}
                 },
                 {
@@ -462,8 +541,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
@@ -480,26 +566,20 @@ def setups():
             'mix_data': {},
             'algs': [
                 {
-                    'name': 'JADE_2',
+                    'name': 'JADE',
                     'func': jade_unmix,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'PCA_2',
+                    'name': 'PCA',
                     'func': Pca,
                     'state': {},
                     'Metrics': {}
                 },
                 {
-                    'name': 'ICAA_2',
+                    'name': 'ICAA',
                     'func': Fast,
-                    'state': {},
-                    'Metrics': {}
-                },
-                {
-                    'name': 'AIRES',
-                    'func': shullers_method,
                     'state': {},
                     'Metrics': {}
                 },
@@ -508,6 +588,13 @@ def setups():
                     'func': auxvia,
                     'state': {},
                     'options': {'stft_size': 512},
+                    'Metrics': {}
+                },
+                {
+                    'name': 'AUXIVA_1024',
+                    'func': auxvia,
+                    'state': {},
+                    'options': {'stft_size': 1024},
                     'Metrics': {}
                 },
                 {
@@ -525,8 +612,15 @@ def setups():
                     'Metrics': {}
                 },
                 {
+                    'name': 'ILRMA_1024',
+                    'func': ILRMA,
+                    'state': {},
+                    'options': {'stft_size': 1024},
+                    'Metrics': {}
+                },
+                {
                     'name': 'ILRMA_2048',
-                    'func': auxvia,
+                    'func': ILRMA,
                     'state': {},
                     'options': {'stft_size': 2048},
                     'Metrics': {}
