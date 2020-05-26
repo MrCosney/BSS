@@ -2,7 +2,7 @@ import numpy as np
 from scipy import signal
 from Player import *
 from setups import setups
-from Algorithms import mix
+from algs.Algorithms import mix
 from Normalizer import *
 from MakeRoom import *
 import copy

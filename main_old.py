@@ -1,4 +1,4 @@
-from Algorithms_copy import *
+from algs.Algorithms import *
 from plots import *
 from Normalizer import *
 from scipy.io.wavfile import write

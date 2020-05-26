@@ -1,4 +1,4 @@
-from Algorithms import *
+from algs.Algorithms import *
 from Olegs import shullers_method
 from scipy import signal
 
