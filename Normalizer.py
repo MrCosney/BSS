@@ -2,13 +2,25 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 import copy
 
-def normalization(s):
-    if s.shape[0] < 7:
-        for i in range(s.shape[0]):
-            s[i] = ((np.float64(s[i]) - np.float64(min(s[i]))) * 2) / (np.float64(np.max(s[i])) - np.float64(min(s[i]))) - 1
+
+def form_source_matrix(S_input: list) -> np.ndarray:
+    S = copy.deepcopy(S_input)
+    l_max = max(len(s) for s in S)
+
+    for s in S:
+        s.resize((1, l_max), refcheck=False)
+
+    return np.vstack(S)
+
+
+def normalization(S: np.ndarray) -> np.ndarray:
+    if S.shape[0] < 7:
+        for i in range(S.shape[0]):
+            S[i] = ((np.float64(S[i]) - np.float64(min(S[i]))) * 2) / (np.float64(np.max(S[i])) - np.float64(min(S[i]))) - 1
     else:
-        s = ((np.float64(s) - np.float64(min(s))) * 2) / (np.float64(np.max(s)) - np.float64(min(s))) - 1
-    return s
+        S = ((np.float64(S) - np.float64(min(S))) * 2) / (np.float64(np.max(S)) - np.float64(min(S))) - 1
+    return S
+
 
 def rmse(original, unmixed):
     '''Return the array with RMSE for each source signal'''

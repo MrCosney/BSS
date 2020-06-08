@@ -1,77 +1,82 @@
 
 from Player import *
 from setups import setups
-from algs.Algorithms import mix
+from Model import mix
 from Normalizer import *
-from MakeRoom import *
-import copy
-import sys
 from plots import *
+from mir_eval.separation import bss_eval_sources
 
 
 def main():
     sims, data_sets = setups()
-    # choose sim type
+
+    # Iterate over simulations
     for sim in sims:
-        mix_type = sim['mixture_type']
-        sim_name = sim['name']
-        mics = sim['microphones']
-        # choose data set
-        for sets in sim['data_sets']:
+        M = sim['microphones']
+
+        # Choose data set
+        for data_set in sim['data_sets']:
+
+            # 1. Load source signals
             X = []
-            for wav in sets['data']:
-                if len(X) == mics:
+            for wav in data_set['data']:
+                if len(X) == M:
                     break
                 if type(wav) == str:
-                    X.append(load_wav(wav, sets['freq']))
+                    X.append(load_wav(wav, data_set['fs']))
                 else:
                     X.append(wav)
+
+            # 2. Normalize & format source signals
+            X = form_source_matrix(X)
             X = normalization(np.array(X))
-            # choose mix type
-            mix_data = sim['mix_data']
-            if mix_type == 'linear':
-                sim['Mix_data'] = mix(copy.deepcopy(X))             #can be removed?
-                mix_data.update({sets['type']: mix(copy.deepcopy(X))})
-            elif mix_type == 'room':
-                sim['Mix_data'], sim['Room_shape'] = makeroom(sets['freq'], copy.deepcopy(X), sim['options'])
-                mix_data.update({sets['type']: mix(copy.deepcopy(X))})
-            else:
-                print("Error: Simulation is chosen wrong.")
-                sys.exit()
-            sim['Mix_data'] = normalization(sim['Mix_data'])
-            # Run algorithms
+
+            # 3. Perform environment simulation (mix signals)
+            sim['options']['fs'] = data_set['fs']  # sampling frequency depends on the used data set
+            filtered, mixed, sim['mix_additional_outputs'] = mix(X, sim['mix_type'], sim['options'])
+
+            # 4. Normalize filtered & mixed arrays
+            sim['mixed'] = normalization(mixed)
+            for f in filtered:
+                filtered[...] = normalization(f)
+            sim['filtered'] = filtered
+
+            # 5. Run algorithms
             for alg in sim['algs']:
 
-                if alg['name'].find('ILRMA') == 0 and sets['type'] == 'Gen Signals':
+                # ToDo: this check probably needs to be somewhere else
+                if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
+                    print('Artificially generated signals are not used with ILRMA')
                     continue
+
+                # ToDo: looks like that was for debugging
                 if sim['name'] == 'Convolutive_3_0':
                     a = 1
-                metrics = alg['Metrics']
-                print("Running " + alg['name'] + " in " + sim_name + "....")
-                # choose mix type
-                if 'options' in alg:
-                    opt = alg['options']
-                else:
-                    opt = None
-                alg['Unmix'], alg['state'] = alg['func'](sim['Mix_data'], alg['state'], opt)
-                alg['Unmix'] = normalization(alg['Unmix'])
-                #if alg['name'] == 'AIRES' and sim['name'] == 'Convolutive_2_7':
-                #    play(alg['Unmix'][0] * 15000)
-                #    play(alg['Unmix'][1] * 15000)
-                metrics.update({sets['type']: evaluate(copy.deepcopy(X), copy.deepcopy(alg['Unmix']))})
-            #delete temp Mix_data form dict
-            del sim['Mix_data']
 
-    #Collect all metrics into new dictionary, display in in console with correct view and plot the results in folder
+                print("Running " + alg['name'] + " in " + sim['name'] + "....")
+
+                unmixed, alg['state'] = alg['func'](sim['mixed'], alg['state'], alg.get('options'))
+                alg['unmixed'] = normalization(unmixed)
+
+                # if alg['name'] == 'AIRES' and sim['name'] == 'Convolutive_2_7':
+                #     play(alg['unmixed'][0] * 15000)
+                #     play(alg['unmixed'][1] * 15000)
+
+                alg['metrics'] = {data_set['type']: evaluate(X, sim['filtered'], alg['unmixed'])}
+
+            # delete temporary "mixed" array form dict
+            del sim['mixed']
+
+    # Collect all metrics into new dictionary, display in in console with correct view and plot the results in folder
     dict_data = rework_dict(sims)
     plot_metrics(dict_data)
 
 
-def evaluate(X, S):
-    #TODO: evaluation of SDR AND SIR int "Algorithms".py file . Check TODO
-    SDR = 1
-    SIR = 1
-    return {'SDR': SDR, 'SIR': SIR, 'RMSE': rmse(X, S)}
+def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) -> dict:
+    ref = np.moveaxis(filtered, 1, 2)
+    Ns = np.minimum(unmixed.shape[1], ref.shape[1])
+    SDR, SIR, SAR, P = bss_eval_sources(ref[:, :Ns, 0], unmixed[:, :Ns])
+    return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P, 'RMSE': rmse(original, unmixed)}
 
 
 if __name__ == "__main__":

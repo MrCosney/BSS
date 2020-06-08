@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def rework_dict(d_data: list):
     results = {}
     for sim in d_data:
         dic = {sim['name']: {}}
         dic2 = dic[sim['name']]
         for alg in sim['algs']:
-            dic2.update({alg['name']: alg['Metrics']})
+            dic2.update({alg['name']: alg['metrics']})
         results.update(dic)
     print("______________________________")
     for key, value in results.items():
@@ -19,9 +20,10 @@ def rework_dict(d_data: list):
     print("______________________________")
     return results
 
+
 def plot_metrics(d_data: dict):
     '''Plot bar plots for presentations'''
-    #plot setups
+    # Setups
     figure_size = (10, 7)
     plot_folder = "plots/"
     bar_width = 0.5
@@ -42,5 +44,5 @@ def plot_metrics(d_data: dict):
         ax.set_xticklabels(x)
         ax.bar(np.arange(0, count), y, width=bar_width)
         # name = "".join((key, ".jpeg"))
-        plt.savefig("".join((plot_folder, key, ".jpeg")))
-    print("".join(("Plots saved in ", plot_folder, "directory.")))
+        plt.savefig("".join((plot_folder, key, ".pdf")))
+    print("".join(("Plots saved in \"./", plot_folder, "\"")))
