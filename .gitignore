@@ -1,5 +1,9 @@
 .DS_Store
+
 *.jpeg
+*.JPG
+*.wav
+*.wave
 
 # Editors
 .vscode/
