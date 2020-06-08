@@ -1,5 +1,4 @@
-import numpy as np
-from scipy import signal
+
 from Player import *
 from setups import setups
 from algs.Algorithms import mix
@@ -7,7 +6,7 @@ from Normalizer import *
 from MakeRoom import *
 import copy
 import sys
-from pprint import pprint
+from plots import *
 
 
 def main():
@@ -45,6 +44,8 @@ def main():
 
                 if alg['name'].find('ILRMA') == 0 and sets['type'] == 'Gen Signals':
                     continue
+                if sim['name'] == 'Convolutive_3_0':
+                    a = 1
                 metrics = alg['Metrics']
                 print("Running " + alg['name'] + " in " + sim_name + "....")
                 # choose mix type
@@ -54,33 +55,22 @@ def main():
                     opt = None
                 alg['Unmix'], alg['state'] = alg['func'](sim['Mix_data'], alg['state'], opt)
                 alg['Unmix'] = normalization(alg['Unmix'])
-                if alg['name'] == 'AIRES' and sim['name'] == 'Convolutive_2_7':
-                    play(alg['Unmix'][0] * 15000)
-                    play(alg['Unmix'][1] * 15000)
+                #if alg['name'] == 'AIRES' and sim['name'] == 'Convolutive_2_7':
+                #    play(alg['Unmix'][0] * 15000)
+                #    play(alg['Unmix'][1] * 15000)
                 metrics.update({sets['type']: evaluate(copy.deepcopy(X), copy.deepcopy(alg['Unmix']))})
             #delete temp Mix_data form dict
             del sim['Mix_data']
 
-    #Collect all metrics into new dictionary and display in in console with correct view =)
-    results = {}
-    for sim in sims:
-        dic = {sim['name']: {}}
-        dic2 = dic[sim['name']]
-        for alg in sim['algs']:
-            dic2.update({alg['name']: alg['Metrics']})
-        results.update(dic)
-    print("______________________________")
-    for key, value in results.items():
-        print("{0} :".format(key))
-        for alg, data in value.items():
-            print("\t{0} :".format(alg))
-            for audio_type, metrics in data.items():
-                print("\t\t{0}: {1}".format(audio_type, metrics))
-    print("______________________________")
+    #Collect all metrics into new dictionary, display in in console with correct view and plot the results in folder
+    dict_data = rework_dict(sims)
+    plot_metrics(dict_data)
+
 
 def evaluate(X, S):
+    #TODO: evaluation of SDR AND SIR int "Algorithms".py file . Check TODO
     SDR = 1
-    SIR = 2
+    SIR = 1
     return {'SDR': SDR, 'SIR': SIR, 'RMSE': rmse(X, S)}
 
 
