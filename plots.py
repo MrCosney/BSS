@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 def rework_dict(d_data: list):
@@ -30,19 +31,30 @@ def plot_metrics(d_data: dict):
 
     for key, value in d_data.items():
         x = [0]
-        y = []
+        RMSE = []
+        SDR = []
+        SIR = []
+        metr_type = ['RMSE', 'SDR', 'SIR']
+        metr_value = [RMSE, SDR, SIR]
         count = 0
         for alg, data in value.items():
             count += 1
             x.append(alg)
             for i, metrics in data.items():
                 if i == 'Voice':
-                    y.append(float(metrics['RMSE']))            #Temp version. Rework to SDR, SIR
-        fig, ax = plt.subplots(figsize=figure_size)
-        ax.set_ylabel('RMSE')                                   #Temp version
-        ax.set_title("{0} :".format(key))
-        ax.set_xticklabels(x)
-        ax.bar(np.arange(0, count), y, width=bar_width)
-        # name = "".join((key, ".jpeg"))
-        plt.savefig("".join((plot_folder, key, ".pdf")))
+                    for z in range(len(metr_type)):
+                        metr_value[z].append(float(np.round(np.mean(metrics[metr_type[z]]), 2)))
+
+        for k in range(len(metr_type)):
+            folder = "".join((plot_folder, key, "/"))
+            try:
+                os.mkdir(folder)
+            except OSError:
+                pass
+            fig, ax = plt.subplots(figsize=figure_size)
+            ax.set_ylabel(metr_type[k], fontsize=14, fontweight="bold")
+            ax.set_title("{0} :".format(key), fontsize=18, fontweight="bold")
+            ax.set_xticklabels(x)
+            ax.bar(np.arange(0, count), metr_value[k], width=bar_width)
+            plt.savefig("".join((folder, metr_type[k], ".pdf")))
     print("".join(("Plots saved in \"./", plot_folder, "\"")))

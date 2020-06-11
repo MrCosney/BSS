@@ -45,16 +45,12 @@ def main():
             for alg in sim['algs']:
 
                 # ToDo: this check probably needs to be somewhere else
+                # ToDo: this for skip Gen.Signals for ILRMA alg
                 if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
                     print('Artificially generated signals are not used with ILRMA')
                     continue
 
-                # ToDo: looks like that was for debugging
-                if sim['name'] == 'Convolutive_3_0':
-                    a = 1
-
                 print("Running " + alg['name'] + " in " + sim['name'] + "....")
-
                 unmixed, alg['state'] = alg['func'](sim['mixed'], alg['state'], alg.get('options'))
                 alg['unmixed'] = normalization(unmixed)
 
