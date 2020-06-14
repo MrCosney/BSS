@@ -3,6 +3,7 @@ from setups import setups
 from Model import mix
 from Normalizer import *
 from plots import *
+from collections import deque
 from mir_eval.separation import bss_eval_sources
 
 
@@ -40,23 +41,35 @@ def main():
                 filtered[...] = normalization(f)
             sim['filtered'] = filtered
 
+            # 5 Padding and splitting into chunks
+            mixed = sim['mixed']
+            n_chunks = (len(mixed[0]) // sim['chunk_size']) * sim['chunk_size']
+            pad_number = sim['chunk_size'] - (len(mixed[0]) - n_chunks)
+            temp_mix = np.zeros((mixed.shape[0], len(mixed[1]) + np.round(pad_number)), dtype=float)
+            temp_mix[:mixed.shape[0], :mixed.shape[1]] = mixed
+
+            mix_queue = deque()
+            # fill queue with fragmented mix data
+            for chunk in range(int(len(temp_mix[0]) / sim['chunk_size'])):
+                mix_queue.append(temp_mix[:mixed.shape[0], sim['chunk_size'] * chunk: sim['chunk_size'] * (chunk + 1)])
+
             # 5. Run algorithms
             for alg in sim['algs']:
-
-                # ToDo: this check probably needs to be somewhere else
-                # ToDo: this for skip Gen.Signals for ILRMA alg
                 if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
                     print('Artificially generated signals are not used with ILRMA')
                     continue
+                print("Running " + alg['name'] + " in " + sim['name'] + " with " + str(sim['chunk_size']) + " Chunk size" "....")
 
-                print("Running " + alg['name'] + " in " + sim['name'] + "....")
-                unmixed, alg['state'] = alg['func'](sim['mixed'], alg['state'], alg.get('options'))
-                alg['unmixed'] = normalization(unmixed)
+                #TODO: Fix to list
+                queue = copy.deepcopy(mix_queue)
+                temp_data = []
+                for i in range(len(queue)):
+                    unmixed, alg['state'] = alg['func'](queue.popleft(), alg['state'], alg.get('options'))
+                    temp_data.append(unmixed)
 
-                # if alg['name'] == 'AIRES' and sim['name'] == 'Convolutive_2_7':
-                #     play(alg['unmixed'][0] * 15000)
-                #     play(alg['unmixed'][1] * 15000)
-
+                #combine all reconstructed chunks into data
+                recovered_data = np.concatenate(temp_data, axis=1)
+                alg['unmixed'] = normalization(recovered_data)
                 alg['metrics'] = {data_set['type']: evaluate(X, sim['filtered'], alg['unmixed'])}
 
             # delete temporary "mixed" array form dict

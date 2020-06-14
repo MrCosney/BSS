@@ -54,10 +54,13 @@ def auxvia(mix_audio: np.array, state: dict, options: dict):
     '''STFT Processing'''
     # Observation vector in the STFT domain
     X = pra.transform.stft.analysis(mix_audio.T, L, L//4, win=win_a)
-    Y = pra.bss.auxiva(X, n_iter=5)
+    if "Filter_state" in state:
+        Y, filter_state = pra.bss.auxiva(X, n_iter=5, W0=state['Filter_state'], return_filters=True)
+    else:
+        Y, filter_state = pra.bss.auxiva(X, n_iter=5, return_filters=True)
     unmix = pra.transform.stft.synthesis(Y, L, L//4, win=win_s).T
+    state['Filter_state'] = filter_state
     return unmix, state
-
 
 def ILRMA(mix_audio: np.array, state: dict, options: dict):
     L = options['stft_size']
@@ -66,6 +69,10 @@ def ILRMA(mix_audio: np.array, state: dict, options: dict):
     '''STFT Processing'''
     # Observation vector in the STFT domain
     X = pra.transform.stft.analysis(mix_audio.T, L, L // 4, win=win_a)
-    Y = pra.bss.ilrma(X, n_iter=5, proj_back=True)
+    if "Filter_state" in state:
+        Y, filter_state = pra.bss.ilrma(X, n_iter=5, W0=state['Filter_state'], return_filters=True, proj_back=True)
+    else:
+        Y, filter_state = pra.bss.ilrma(X, n_iter=5, return_filters=True, proj_back=True)
     unmix = pra.transform.stft.synthesis(Y, L, L // 4, win=win_s).T
+    state['Filter_state'] = filter_state
     return unmix, state

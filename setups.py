@@ -33,12 +33,10 @@ def setups():
             'mix_type': 'convolutive',
             'microphones': 2,
             'data_sets': data_sets,
+            'chunk_size': 1024,
             # 'options': {'absorp': 0.35, 'orders': 0, 'sigma2_awgn': 0},
             'options': {'rt60': 0.5, 'room_dim': [7, 5, 3.2], 'sigma2_awgn': 0},
             'algs': [
-                {
-                    'name': 'AIRES', 'func': shullers_method, 'state': {}, 'metrics': {}
-                },
                 {
                     'name': 'AUXIVA_512', 'func': auxvia, 'state': {}, 'options': {'stft_size': 512}, 'metrics': {}
                 },
@@ -56,6 +54,9 @@ def setups():
                 },
                 {
                     'name': 'ILRMA_2048', 'func': ILRMA, 'state': {}, 'options': {'stft_size': 2048}, 'metrics': {}
+                },
+                {
+                    'name': 'AIRES', 'func': shullers_method, 'state': {}, 'metrics': {}
                 }
             ]
         },
