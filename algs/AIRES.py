@@ -2,8 +2,6 @@ import numpy as np
 import scipy
 import scipy.optimize as opt
 import scipy.signal
-import scipy.io.wavfile as wav
-import matplotlib.pyplot as plt
 
 
 def allp_delay_filter(tau):
@@ -365,75 +363,3 @@ def gradient(self, X_norm, dxr_da, dxr_dd):
     [fsum(z) for z in gradient]
 
     return gradient
-
-
-def check_gradient():
-    # Generate arbitrary data
-    X = np.random.randn(1024, 2)
-    # Smooth it for nicer picture
-    N = 16
-    lp = scipy.signal.remez(63, bands=[0, 0.5 / N, 0.7 / N, 1], desired=[1, 0], weight=[1, 100], Hz=2)
-    # Apply low-pass filter
-    X = scipy.signal.lfilter(lp, [1], X, axis=0)
-
-    import matplotlib.pyplot as plt
-
-    # Point in the parameter space where we check the gradient
-    coeffs_at_touch_point = np.array([0.2, 0.7, 3.4, 5.3])
-    # direction along which we evaluate cost function & gradient
-    coeffs_direction = coeffs_at_touch_point + 0.1
-    # We vary theta around touch point
-    thetas = np.arange(-1.0, 1.0, 0.001)*0.01
-    # Allocate
-    cf = np.zeros_like(thetas)
-    gr_line = np.zeros_like(thetas)
-    # We compute the cost function & gradient at touch point
-    cost_at_touch_point, gradient_at_touch_point = cost_grad_n_abs_kl(coeffs_at_touch_point, X)
-    eps = np.sqrt(np.finfo(float).eps)
-    gradient_at_touch_point = opt.approx_fprime(coeffs_at_touch_point, cost_n_abs_kl, eps, X)
-    # Iterate over all thetas, draw cost function & it's 1-st order approximation at touch point
-    it = np.nditer(thetas, flags=['f_index'])
-    while not it.finished:
-        i = it.index
-        theta = it.value
-        coeffs = coeffs_at_touch_point + theta*(coeffs_at_touch_point - coeffs_direction)
-        cf[i] = cost_n_abs_kl(coeffs, X)
-        gr_line[i] = cost_at_touch_point - np.dot(gradient_at_touch_point, coeffs_at_touch_point - coeffs)
-        it.iternext()
-
-    fig, ax = plt.subplots()
-    ax.plot(thetas, cf, 'b-', thetas, gr_line, 'r--')
-
-    ax.set(xlabel='theta', ylabel='Cost function & 1-st order approximation')
-    ax.grid()
-
-    plt.show()
-
-
-def check_separation():
-    sample_rate, x = wav.read("wav/stereovoices.wav")
-
-    x = x * 1.0 / np.max(abs(x))
-
-    # Show mixed channels
-    x_o = x.copy()
-    plt.plot(x_o[:, 0])
-    plt.plot(x_o[:, 1])
-    plt.title('AIRES.py: The mixed channels')
-    plt.show()
-
-    coeffs = find_coeffs_optimization(x, np.array([0.0, 0.0, 0.0, 0.0]))
-    print(coeffs)
-
-    x_del, fs0, fs1 = unmixing(coeffs, x_o)
-
-    plt.plot(x_del[:, 0])
-    plt.plot(x_del[:, 1])
-    plt.title('AIRES.py: The unmixed channels')
-    plt.show()
-
-
-if __name__ == "__main__":
-    # check_gradient()
-    check_separation()
-    # ToDo: check_step1(), check_step2(), etc ...
