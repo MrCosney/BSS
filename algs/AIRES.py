@@ -411,7 +411,7 @@ def check_gradient():
 
 
 def check_separation():
-    sample_rate, x = wav.read("WAV Audio/stereovoices.wav")
+    sample_rate, x = wav.read("wav/stereovoices.wav")
 
     x = x * 1.0 / np.max(abs(x))
 
