@@ -23,6 +23,7 @@ def play(audio):
     p.terminate()
     p.terminate()
 
+
 def load_wav(filename, samplerate=44100):
 
     rate, data = wavfile.read(filename)

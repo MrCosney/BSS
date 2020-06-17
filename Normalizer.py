@@ -24,7 +24,7 @@ def normalization(S: np.ndarray) -> np.ndarray:
 
 def rmse(original, unmixed):
     '''Return the array with RMSE for each source signal'''
-    #Compute max length of the vector and resize others with it for coreect RMSE calculation
+    # Compute max length of the vector and resize others with it for coreect RMSE calculation
     sources = original.shape[0]
     mics = unmixed.shape[0]
     length = 0
