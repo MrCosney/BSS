@@ -48,18 +48,27 @@ def Fast(mix_audio: np.array, state: dict, options: dict):
 def auxvia(mix_audio: np.array, state: dict, options: dict):
     '''I rewrite it to use windows, now separation more clear but calc time is increased'''
     L = options['stft_size']
-    #TODO: find a correct window and hop (L//x)
-    win_a = pra.hann(L)
-    win_s = pra.transform.stft.compute_synthesis_window(win_a, L//4)
+    hop = L // 2
+    #add overlap
+    overlap_part = mix_audio[:mix_audio.shape[0], mix_audio.shape[1] - hop:]
+
+    if 'Overlap' in state:
+        mix_audio[:mix_audio.shape[0], : hop] += state['Overlap']
+
+    win_a = pra.hann(L, flag='asymmetric', length='full')
+    win_s = pra.transform.stft.compute_synthesis_window(win_a, hop=hop)
     '''STFT Processing'''
     # Observation vector in the STFT domain
-    X = pra.transform.stft.analysis(mix_audio.T, L, L//4, win=win_a)
+    X = pra.transform.stft.analysis(mix_audio.T, L, hop=hop, win=win_a)
     if "Filter_state" in state:
         Y, filter_state = pra.bss.auxiva(X, n_iter=5, W0=state['Filter_state'], return_filters=True)
     else:
         Y, filter_state = pra.bss.auxiva(X, n_iter=5, return_filters=True)
-    unmix = pra.transform.stft.synthesis(Y, L, L//4, win=win_s).T
+    unmix = pra.transform.stft.synthesis(Y, L, hop=hop, win=win_s).T
+
+    #save filters state and overlap data
     state['Filter_state'] = filter_state
+    state['Overlap'] = overlap_part
     return unmix, state
 
 def ILRMA(mix_audio: np.array, state: dict, options: dict):

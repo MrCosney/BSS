@@ -69,6 +69,7 @@ def main():
 
                 #combine all reconstructed chunks into data
                 recovered_data = np.concatenate(temp_data, axis=1)
+                play(recovered_data[1] * 10000)
                 alg['unmixed'] = normalization(recovered_data)
                 alg['metrics'] = {data_set['type']: evaluate(X, sim['filtered'], alg['unmixed'])}
 
