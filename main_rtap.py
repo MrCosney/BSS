@@ -48,7 +48,8 @@ def main():
             temp_mix = np.zeros((mixed.shape[0], len(mixed[1]) + np.round(pad_number)), dtype=float)
             temp_mix[:mixed.shape[0], :mixed.shape[1]] = mixed
 
-            mix_queue = deque()
+            #mix_queue = deque()
+            mix_queue = []
             # fill queue with fragmented mix data
             for chunk in range(int(len(temp_mix[0]) / sim['chunk_size'])):
                 mix_queue.append(temp_mix[:mixed.shape[0], sim['chunk_size'] * chunk: sim['chunk_size'] * (chunk + 1)])
@@ -60,16 +61,13 @@ def main():
                     continue
                 print("Running " + alg['name'] + " in " + sim['name'] + " with " + str(sim['chunk_size']) + " Chunk size" "....")
 
-                #TODO: Fix to list
-                queue = copy.deepcopy(mix_queue)
                 temp_data = []
-                for i in range(len(queue)):
-                    unmixed, alg['state'] = alg['func'](queue.popleft(), alg['state'], alg.get('options'))
+                for i in range(len(mix_queue)):
+                    unmixed, alg['state'] = alg['func'](mix_queue[i], alg['state'], alg.get('options'))
                     temp_data.append(unmixed)
-
                 #combine all reconstructed chunks into data
                 recovered_data = np.concatenate(temp_data, axis=1)
-                play(recovered_data[1] * 10000)
+                play(recovered_data[0] * 10000)
                 alg['unmixed'] = normalization(recovered_data)
                 alg['metrics'] = {data_set['type']: evaluate(X, sim['filtered'], alg['unmixed'])}
 
