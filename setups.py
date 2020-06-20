@@ -218,19 +218,21 @@ def setups():
     return sims, data_sets
 
 
-def device_idx(self):
-    """This method check if mic.array is connected or not and returns device index if it is connected"""
+def speakers_device_idx():
+    """This functions get device index for output source data to speakers"""
     import pyaudio
+    import sys
 
     p = pyaudio.PyAudio()
-    device_idx = None
+    device_idx = []
+    print('\033[96mList of Speakers:\033[0m')
     for i in range(p.get_device_count()):
-        if "miniDSP" in p.get_device_info_by_index(i)['name']:
-            __device_idx = i
-            print(self.c_msg('using {} as input'.format(self.__p.get_device_info_by_index(__device_idx)['name'])))
-            return __device_idx
+        if "Динамики" in p.get_device_info_by_index(i)['name']:
+            print("\t", p.get_device_info_by_index(i)['name'])
+            device_idx.append(i)
 
-    if device_idx is None:
-        print(self.c_msg('the MiniDsp is not connected! Using default input...'))
+    if len(device_idx) == 0:
+        print("\033[31m {}" .format('Error : No Speakers!'))
+        sys.exit()
 
-    return None
+    return device_idx

@@ -4,23 +4,21 @@ from scipy.io import wavfile
 from scipy.signal import resample
 
 
-def play(audio):
+def play(audio: np.array, device_idx):
     p = pyaudio.PyAudio()
-    chunk = 1024
     stream = p.open(format=
                     pyaudio.paInt16,
                     channels=1,
                     rate=44100,
-                    output=True)
+                    output=True,
+                    output_device_index=device_idx)
     # read data (based on the chunk size)
     audio = np.clip(audio.transpose(), -2 ** 15, 2 ** 15 - 1)
     sound = (audio.astype(np.int16).tostring())
 
     stream.write(sound)
-
     stream.stop_stream()
     stream.close()
-    p.terminate()
     p.terminate()
 
 
