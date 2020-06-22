@@ -227,6 +227,7 @@ def speakers_device_idx():
     device_idx = []
     print('\033[96mList of Speakers:\033[0m')
     for i in range(p.get_device_count()):
+        #print("\t", p.get_device_info_by_index(i))
         if "Динамики" in p.get_device_info_by_index(i)['name']:
             print("\t", p.get_device_info_by_index(i)['name'])
             device_idx.append(i)

@@ -1,12 +1,11 @@
 from Player import *
 from setups import *
 from Model import mix
-from Recorder import *
 from Normalizer import *
 from plots import *
 from mir_eval.separation import bss_eval_sources
+from RecorderClass import Recorder
 import threading
-from multiprocessing import Queue
 
 
 def main():
@@ -26,19 +25,33 @@ def main():
                 else:
                     X.append(wav)
 
+            X = form_source_matrix(X)
+
+            #calculate the max duration of audio for recording #Todo:fix for more fit
+            data_set['audio_duration'] = len(X[0]) / data_set['fs']
+
+            #Make the threads for Recorder and Player
+            #TODO: Maybe rewrite with Multiprocessing Pool class, I tried but it wait the thread for some reason (Commented version on the bottom of this page )
             idx = speakers_device_idx()
-            rec = threading.Thread(target=Recorder)
+            recorder = Recorder(kwargs=({'fs': data_set['fs'],
+                                         'chunk_size': sim['chunk_size'],
+                                         'audio_duration': data_set['audio_duration']}))
+            rec = threading.Thread(target=recorder._record)
             s1 = threading.Thread(target=play, args=(X[0], idx[0]))
-            s2 = threading.Thread(target=play, args=(X[1], idx[1]))
+            #s2 = threading.Thread(target=play, args=(X[1], idx[1]))
+
             #start threads and wait till last speaker is done
             rec.start()
             s1.start()
-            s2.start()
-            s2.join()
+            #s2.start()
+            rec.join()
+
+            #Collect recorded data from the Recorder in chunks representation
+            rec_data = recorder._data
 
             # 4. Normalize filtered & mixed arrays
-            play(a * 10000 , device_idx_list[0])
-
+            #TODO: Stopped here
+            a/5
             # 5. Run algorithms
             for alg in sim['algs']:
                 if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
@@ -72,3 +85,10 @@ def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) ->
 
 if __name__ == "__main__":
     main()
+
+
+# recorder = Recorder1(kwargs=(data_set['fs'], sim['chunk_size'], data_set['audio_duration']))
+# pool = Pool(
+#     processes=X.shape[0] + 2)  # TODO: Make .shape[0] processes + 1 for rec + 1 for main(P.s not sure have to check
+# rec_data = pool.apply_async(recorder._record)
+# z = rec_data.get(timeout=5)
