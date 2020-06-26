@@ -3,7 +3,6 @@
 import numpy as np
 from sklearn.decomposition import FastICA, PCA
 import pyroomacoustics as pra
-from Player import play
 
 
 # def jade_unmix(mix_audio: np.array, state: dict, options: dict):

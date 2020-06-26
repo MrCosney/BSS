@@ -11,7 +11,8 @@ def setups():
         {
             'type': 'Voice',
             'fs': 44100,
-            'data': ["Audio/Original/Kunkka.wav", "Audio/Original/Ench.wav", "Audio/Original/Timber.wav"]
+            'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"]
+            #'data': ["Audio/Original/Gorillaz.wav", "Audio/Original/Cash.wav", "Audio/Original/Timber.wav"]
         },
         # {
         #     'type': 'Music',
@@ -31,7 +32,7 @@ def setups():
             'name': 'Convolutive_2_0',
             # 'mix_type': 'linear',
             'mix_type': 'convolutive',
-            'microphones': 2,
+            'microphones': 3,
             'data_sets': data_sets,
             'chunk_size': 2048,
             # 'options': {'absorp': 0.35, 'orders': 0, 'sigma2_awgn': 0},
@@ -227,8 +228,7 @@ def speakers_device_idx():
     device_idx = []
     print('\033[96mList of Speakers:\033[0m')
     for i in range(p.get_device_count()):
-        #print("\t", p.get_device_info_by_index(i))
-        if "Динамики" in p.get_device_info_by_index(i)['name']:
+        if "TF-PS1234B Stereo" in p.get_device_info_by_index(i)['name']:
             print("\t", p.get_device_info_by_index(i)['name'])
             device_idx.append(i)
 

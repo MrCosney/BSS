@@ -4,9 +4,6 @@ from Model import mix
 from Normalizer import *
 from plots import *
 from mir_eval.separation import bss_eval_sources
-from RecorderClass import Recorder
-import threading
-
 
 def main():
     sims, data_sets = setups()
@@ -26,29 +23,12 @@ def main():
                     X.append(wav)
 
             X = form_source_matrix(X)
-
+            X = normalization(np.array(X))
             #calculate the max duration of audio for recording #Todo:fix for more fit
             data_set['audio_duration'] = len(X[0]) / data_set['fs']
 
             #Make the threads for Recorder and Player
-            #TODO: Maybe rewrite with Multiprocessing Pool class, I tried but it wait the thread for some reason (Commented version on the bottom of this page )
-            idx = speakers_device_idx()
-            recorder = Recorder(kwargs=({'fs': data_set['fs'],
-                                         'chunk_size': sim['chunk_size'],
-                                         'audio_duration': data_set['audio_duration']}))
-            rec = threading.Thread(target=recorder._record)
-            s1 = threading.Thread(target=play, args=(X[0], idx[0]))
-            #s2 = threading.Thread(target=play, args=(X[1], idx[1]))
-
-            #start threads and wait till last speaker is done
-            rec.start()
-            s1.start()
-            #s2.start()
-            rec.join()
-
-            #Collect recorded data from the Recorder in chunks representation
-            rec_data = recorder._data
-
+            rec_data = play_and_record(X, data_set, sim)
             # 4. Normalize filtered & mixed arrays
             #TODO: Stopped here
             a/5
