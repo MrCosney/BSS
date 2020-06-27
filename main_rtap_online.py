@@ -12,6 +12,7 @@ def main():
     for sim in sims:
         M = sim['microphones']
 
+        # 1. Load source signals
         for data_set in sim['data_sets']:
             X = []
             for wav in data_set['data']:
@@ -21,17 +22,31 @@ def main():
                     X.append(load_wav(wav, data_set['fs']))
                 else:
                     X.append(wav)
-
+            # 2. Normalize & format source signals
             X = form_source_matrix(X)
             X = normalization(np.array(X))
-            #calculate the max duration of audio for recording #Todo:fix for more fit
-            data_set['audio_duration'] = len(X[0]) / data_set['fs']
 
-            #Make the threads for Recorder and Player
+            # 3. Perform environment simulation (mix signals)
+            sim['options']['fs'] = data_set['fs']  # sampling frequency depends on the used data set
+            filtered, mixed, sim['mix_additional_outputs'] = mix(X, sim['mix_type'], sim['options'])
+
+            # 4. Produce audio data from speakers and record it by the board (Real Simulation) #Todo:fix for more fit
+            data_set['audio_duration'] = len(X[0]) / data_set['fs']
             rec_data = play_and_record(X, data_set, sim)
+
+
             # 4. Normalize filtered & mixed arrays
-            #TODO: Stopped here
-            a/5
+                # 4.1 Normalize Recorded Audio
+            for i in range(len(rec_data)):
+                rec_data[i] = normalization(rec_data[i])
+            sim['real_mixed'] = rec_data
+
+                # 4.2 Normalize Simulated Audio and filtered
+            sim['mixed'] = normalization(mixed)
+            for f in filtered:
+                filtered[...] = normalization(f)
+            sim['filtered'] = filtered
+
             # 5. Run algorithms
             for alg in sim['algs']:
                 if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
