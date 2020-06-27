@@ -18,9 +18,11 @@ def play(audio: np.array, device_idx):
     audio = np.clip(audio.transpose(), -2 ** 15, 2 ** 15 - 1)
     sound = (audio.astype(np.int16).tostring())
 
+    print('\033[34m Player' + str(device_idx) + ':\033[0m', ' Reproduce audio...')
     stream.write(sound)
     stream.stop_stream()
     stream.close()
+    print('\033[34m Player' + str(device_idx) + ':\033[0m', ' Done.')
     p.terminate()
 
 

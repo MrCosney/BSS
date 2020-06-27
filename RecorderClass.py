@@ -17,6 +17,7 @@ class Recorder:
         self._data = []
 
     def _record(self):
+        print("\n", '\033[31mRecorder:\033[0m', ' Audio is Recording by ', self._channels, ' Microphones...')
         self.__callbackFlag = pyaudio.paContinue
         self.__stream = self.__p.open(format=pyaudio.paFloat32,
                                       rate=self._rate,
@@ -35,17 +36,14 @@ class Recorder:
         return self._data
 
     def _stop_record(self):
-        print("closing the audio stream...")
         self.__callbackFlag = pyaudio.paComplete
         self.__stream.stop_stream()
-        print("stream is closed.")
+        print('\033[31m Recorder:\033[0m', ' Audio is Recorded.')
 
     def __callback(self, in_data, frame_count, time_info, status):
         in_data = np.fromstring(in_data, 'Float32').reshape((frame_count, self._channels)).transpose()
         self._data.append(in_data)
         return np.zeros((0, 0)), self.__callbackFlag
-
-    # TODO:uncomment and fix in when get miniDSP
 
     def device_idx(self):
         """This method check if mic.array is connected or not and returns device index if it is connected"""
@@ -64,4 +62,3 @@ class Recorder:
             sys.exit()
 
         return None
-

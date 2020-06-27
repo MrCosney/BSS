@@ -34,28 +34,29 @@ def main():
             data_set['audio_duration'] = len(X[0]) / data_set['fs']
             rec_data = play_and_record(X, data_set, sim)
 
-
-            # 4. Normalize filtered & mixed arrays
-                # 4.1 Normalize Recorded Audio
+            # 5. Normalize filtered & mixed arrays
+                # 5.1 Normalize Recorded Audio
             for i in range(len(rec_data)):
                 rec_data[i] = normalization(rec_data[i])
             sim['real_mixed'] = rec_data
 
-                # 4.2 Normalize Simulated Audio and filtered
+                # 5.2 Normalize Simulated Audio and filtered
             sim['mixed'] = normalization(mixed)
             for f in filtered:
                 filtered[...] = normalization(f)
             sim['filtered'] = filtered
 
-            # 5. Run algorithms
+            # 6. Run algorithms
+            print('\n\033[35mSeparation process:\033[0m')
             for alg in sim['algs']:
                 if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
                     print('Artificially generated signals are not used with ILRMA')
                     continue
-                print("Running " + alg['name'] + " in " + sim['name'] + " with " + str(sim['chunk_size']) + " Chunk size" "....")
+                print("\tSeparation by " '\033[33m' + alg['name'], '\033[0m' + "in " + sim['name'] + " with " + str(sim['chunk_size']) + " Chunk size" "....")
                 temp_data = []
-                for i in range(len(mix_queue)):
-                    unmixed, alg['state'] = alg['func'](mix_queue[i], alg['state'], alg.get('options'))
+                #TODO: Добавить внешний цикл для анмиксинга и rec_data и mixed
+                for i in range(len(rec_data)):
+                    unmixed, alg['state'] = alg['func'](rec_data[i], alg['state'], alg.get('options'))
                     temp_data.append(unmixed)
                 #combine all reconstructed chunks into data
                 recovered_data = np.concatenate(temp_data, axis=1)

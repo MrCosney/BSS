@@ -51,11 +51,12 @@ def main():
                 mix_queue.append(temp_mix[:mixed.shape[0], sim['chunk_size'] * chunk: sim['chunk_size'] * (chunk + 1)])
 
             # 5. Run algorithms
+            print('\033[35mSeparation process:\033[0m')
             for alg in sim['algs']:
                 if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
                     print('Artificially generated signals are not used with ILRMA')
                     continue
-                print("Running " + alg['name'] + " in " + sim['name'] + " with " + str(sim['chunk_size']) + " Chunk size" "....")
+                print("\tSeparation by" + alg['name'] + " in " + sim['name'] + " with " + str(sim['chunk_size']) + " Chunk size" "....")
                 temp_data = []
                 for i in range(len(mix_queue)):
                     unmixed, alg['state'] = alg['func'](mix_queue[i], alg['state'], alg.get('options'))
