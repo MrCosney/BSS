@@ -42,7 +42,7 @@ def play_and_record(X:np.array, data_set:dict, sim:dict):
     '''Play audio data on Speakers and Record via MiniDSP'''
     import sys
     # TODO: Maybe rewrite with Multiprocessing Pool class, I tried but it wait the thread for some reason (Commented version on the bottom of this page)
-    vol_gain = 1000
+    vol_gain = 10000
     idx = speakers_device_idx()
 
     X = X * vol_gain
@@ -51,6 +51,7 @@ def play_and_record(X:np.array, data_set:dict, sim:dict):
                                  'audio_duration': data_set['audio_duration'],
                                  'microphones': sim['microphones']}))
     rec = threading.Thread(target=recorder._record)
+    #TODO: переделать через лист
     z = X.shape[0]
     if len(idx) == 3:
         s1 = threading.Thread(target=play, args=(X[0], idx[0]))

@@ -3,6 +3,7 @@ from setups import *
 from Model import mix
 from Normalizer import *
 from plots import *
+from scipy.io.wavfile import write
 from mir_eval.separation import bss_eval_sources
 
 def main():
@@ -40,11 +41,16 @@ def main():
                 rec_data[i] = normalization(rec_data[i])
             sim['real_mixed'] = rec_data
 
-                # 5.2 Normalize Simulated Audio and filtered
+            # 5.2 Normalize Simulated Audio and filtered
             sim['mixed'] = normalization(mixed)
             for f in filtered:
                 filtered[...] = normalization(f)
             sim['filtered'] = filtered
+
+            # 5.3 Create folders for save data
+            dir_name = "".join(("Audio/Unmixed/", sim['name']))
+            if not os.path.isdir(dir_name):
+                os.mkdir(dir_name)
 
             # 6. Run algorithms
             print('\n\033[35mSeparation process:\033[0m')
@@ -58,9 +64,17 @@ def main():
                 for i in range(len(rec_data)):
                     unmixed, alg['state'] = alg['func'](rec_data[i], alg['state'], alg.get('options'))
                     temp_data.append(unmixed)
-                #combine all reconstructed chunks into data
+
+                # 6.1 Combine all reconstructed chunks into data and save into .wav files
                 recovered_data = np.concatenate(temp_data, axis=1)
-                #play(recovered_data[0] * 10000)
+
+                alg_dir = "".join((dir_name, "/", alg['name']))
+                if not os.path.isdir(alg_dir):
+                    os.mkdir(alg_dir)
+
+                for i in range(recovered_data.shape[0]):
+                    write("".join((dir_name, data_set['file_names'][i])), data_set['fs'], np.float32(recovered_data[i]))
+
                 alg['unmixed'] = normalization(recovered_data)
                 alg['metrics'] = {data_set['type']: evaluate(X, sim['filtered'], alg['unmixed'])}
 

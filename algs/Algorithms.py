@@ -59,6 +59,7 @@ def auxvia(mix_audio: np.array, state: dict, options: dict):
         try:
             Y, filter_state = pra.bss.auxiva(X, n_iter=5, W0=state['Filter_state'], return_filters=True)
         except:
+            print(np.linalg.norm(X, 'fro'))
             return mix_audio, state
        # stft = pra.transform.STFT(L, hop=hop, analysis_window=window, channels=mix_audio.shape[0])
     else:

@@ -4,6 +4,7 @@ from Model import mix
 from Normalizer import *
 from plots import *
 from mir_eval.separation import bss_eval_sources
+from scipy.io.wavfile import write
 
 
 def main():

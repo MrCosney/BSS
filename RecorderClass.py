@@ -4,7 +4,7 @@ import time
 
 
 class Recorder:
-    def __init__(self, parent=None, **kwargs):
+    def __init__(self, **kwargs):
         self.__p = pyaudio.PyAudio()
         self.kwargs = kwargs['kwargs']
         self._rate = self.kwargs['fs'] if 'fs' in self.kwargs else 44100
@@ -58,7 +58,7 @@ class Recorder:
                 return __device_idx
 
         if __device_idx is None:
-            print('the MiniDsp is not connected! Using default input...')
+            print("\033[31m{}".format('\tError : The MiniDsp is not connected!'))
             sys.exit()
 
         return None

@@ -11,8 +11,8 @@ def setups():
         {
             'type': 'Voice',
             'fs': 44100,
-            'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"]
-            #'data': ["Audio/Original/Gorillaz.wav", "Audio/Original/Cash.wav", "Audio/Original/Timber.wav"]
+            'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
+            'file_names': ["Man.wav", "Woman.wav", "Announcer.wav"]
         },
         # {
         #     'type': 'Music',
