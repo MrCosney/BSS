@@ -11,13 +11,14 @@ class Recorder:
         self._chunk_size = self.kwargs['chunk_size'] if 'chunk_size' in self.kwargs else 2048
         self._audio_duration = self.kwargs['audio_duration'] if 'audio_duration' in self.kwargs else 4
         self._channels = self.kwargs['microphones'] if 'microphones' in self.kwargs else 2
-        self.device_idx = self.device_idx()  # TODO: Fix to MiniDsp
+        self.device_idx = self.device_idx()
         self.__stream = None
         self.__callbackFlag = None
-        self._data = []
+        self._data = None
 
     def _record(self):
-        print("\n", '\033[31mRecorder:\033[0m', ' Audio is Recording by ', self._channels, ' Microphones...')
+        self._data = []
+        print('\t \033[31mRecorder:\033[0m', ' Audio is Recording by ', self._channels, ' Microphones...')
         self.__callbackFlag = pyaudio.paContinue
         self.__stream = self.__p.open(format=pyaudio.paFloat32,
                                       rate=self._rate,
@@ -38,7 +39,7 @@ class Recorder:
     def _stop_record(self):
         self.__callbackFlag = pyaudio.paComplete
         self.__stream.stop_stream()
-        print('\033[31m Recorder:\033[0m', ' Audio is Recorded.')
+        print('\t\033[31m Recorder:\033[0m', ' Audio is Recorded.')
 
     def __callback(self, in_data, frame_count, time_info, status):
         in_data = np.fromstring(in_data, 'Float32').reshape((frame_count, self._channels)).transpose()
@@ -60,5 +61,4 @@ class Recorder:
         if __device_idx is None:
             print("\033[31m{}".format('\tError : The MiniDsp is not connected!'))
             sys.exit()
-
         return None

@@ -54,3 +54,19 @@ def rmse(original, unmixed):
         rms.append(rmse_t.pop(rmse_t.index(min(rmse_t))))
     rmse = np.mean(rms)
     return np.round(rmse, 4)
+
+
+def rework_conv(mixed, sim):
+    '''Rework the convolutive data into chunks, for Real-Time emulation'''
+
+    n_chunks = (len(mixed[0]) // sim['chunk_size']) * sim['chunk_size']
+    pad_number = sim['chunk_size'] - (len(mixed[0]) - n_chunks)
+    temp_mix = np.zeros((mixed.shape[0], len(mixed[1]) + np.round(pad_number)), dtype=float)
+    temp_mix[:mixed.shape[0], :mixed.shape[1]] = mixed
+
+    mix_queue = []
+    # fill list of chunks with fragmented mix data
+    for chunk in range(int(len(temp_mix[0]) / sim['chunk_size'])):
+        mix_queue.append(temp_mix[:mixed.shape[0], sim['chunk_size'] * chunk: sim['chunk_size'] * (chunk + 1)])
+
+    return mix_queue

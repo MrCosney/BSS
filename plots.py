@@ -3,6 +3,26 @@ import numpy as np
 import os
 
 
+def plot(X: np.array):
+    '''Plot filtered and audio data'''
+    figure_size = (15, 7)
+    filt_plot_folder = "plots/filtered/"
+    mixed_plot_folder = "plots/mixed/"
+
+    fig, ax = plt.subplots(X.shape[0], X.shape[1], sharex='col', sharey='row', figsize=figure_size)
+    plt.grid()
+    x = 0
+    for i in X:
+        y = 0
+        for k in range(i.shape[0]):
+            ax[y, x].plot(i[y])
+            ax[y, x].grid()
+            y += 1
+        x += 1
+    #plt.show()
+
+
+
 def rework_dict(d_data: list):
     results = {}
     for sim in d_data:

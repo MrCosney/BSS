@@ -3,18 +3,26 @@ import pyroomacoustics as pra
 import sys
 import copy
 from typing import Tuple
+from setups import speakers_device_idx
+from RecorderClass import Recorder
+import threading
+from Player import play
 
 
-def mix(S_input: np.ndarray, mix_type: str, opts: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
-    S = copy.deepcopy(S_input)
+def mix(s_input: np.ndarray, data_set: dict, sim: dict):
+    S = copy.deepcopy(s_input)
 
     # choose mix type
+    mix_type = sim['mix_type']
+
     if mix_type == 'linear':
-        return mix_linear(S, opts)
+        return mix_linear(S, sim['options'])
     elif mix_type == 'convolutive':
-        return mix_convolutive(S, opts)
+        return mix_convolutive(S, sim['options'])
+    elif mix_type == 'convolutive_real':
+        return mix_record(S, data_set, sim)
     else:
-        print("Error: Simulation is chosen wrong.")
+        print("\033[31m {}".format('Error : Simulation is chosen wrong!'))
         sys.exit()
 
 
@@ -112,3 +120,64 @@ def mix_convolutive(S: np.array, opts: dict) -> Tuple[np.ndarray, np.ndarray, di
     mixed = np.sum(filtered, axis=0)
 
     return filtered, mixed, {'room_object': room}
+
+
+def mix_record(X:np.array, data_set: dict, sim: dict):
+    '''Play audio data on Speakers and Record via MiniDSP'''
+
+    # 1. Setup the Voliume of produced data and setup the Recorder
+    vol_gain = 5000
+    idx = speakers_device_idx()
+    X = X * vol_gain
+    recorder = Recorder(kwargs=({'fs': data_set['fs'],
+                                 'chunk_size': sim['chunk_size'],
+                                 'audio_duration': data_set['audio_duration'],
+                                 'microphones': sim['microphones']}))
+
+    # 2. Play each source separatly and form the Filtered data
+    filtered = filtered_real_data(X, recorder, idx)
+
+    # 3. Make threads for each speaker. Play and record all source data in the same time.
+    print('\033[96mStarting record the mixing data...\033[0m')
+    threads = []
+    for i in range(len(idx)):
+        threads.append(threading.Thread(target=play, args=(X[i], idx[i])))
+
+    rec = threading.Thread(target=recorder._record)
+    rec.start()
+    for thread in threads:
+        thread.start()
+    rec.join()
+
+    return filtered, recorder._data, {'recorder': recorder}
+
+
+
+def filtered_real_data(X, recorder, idx):
+    '''Play each source separatly for form the Filtered data '''
+    #TODO: Иногда из за кривого опредленения длительности,
+    #      размеры листов записанных чанков для разных треков могут не совпадать, тогда выкинет ошибку
+    #      -> просто перезапустить
+    # UPD: С округлением даты записи до 1 числа после запятой ошибки не возникло в 10 тестах
+    import time
+
+    filtered_temp = []
+    for i in range(X.shape[0]):
+        rec = threading.Thread(target=recorder._record)
+        try:
+            s = threading.Thread(target=play, args=(X[i], idx[i]))
+        except IndexError:
+            break
+        print('\033[96mStarting record the filtered source \033[0m')
+        rec.start()
+        s.start()
+        rec.join()
+        time.sleep(2)
+        filtered_temp.append(recorder._data)
+
+    filtered = []
+    for i in range(len(filtered_temp)):
+        filtered.append(np.concatenate(filtered_temp[i], axis=1))
+
+    return np.array(filtered)
+

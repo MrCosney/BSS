@@ -41,10 +41,10 @@ def Fast(mix_audio: np.array, state: dict, options: dict):
 #    SDR.append(sdr)
 #    SIR.append(sir)
 
+    #TODO: Оба алгоритма ниже практически одинаковы,но пока не переносил в единую функцию, с выбором алогритма по имени
+    # возможно какие то параметры будуем менять у каждого отдельно.
 
-def auxvia(mix_audio: np.array, state: dict, options: dict):
-    '''I rewrite it to use windows, now separation more clear but calc time is increased'''
-    #print(np.linalg.det(mix_audio))
+def auxiva(mix_audio: np.array, state: dict, options: dict):
     if 'stft' not in state:
         L = options['stft_size']
         hop = L // 2
@@ -59,11 +59,13 @@ def auxvia(mix_audio: np.array, state: dict, options: dict):
         try:
             Y, filter_state = pra.bss.auxiva(X, n_iter=5, W0=state['Filter_state'], return_filters=True)
         except:
-            print(np.linalg.norm(X, 'fro'))
             return mix_audio, state
        # stft = pra.transform.STFT(L, hop=hop, analysis_window=window, channels=mix_audio.shape[0])
     else:
-        Y, filter_state = pra.bss.auxiva(X, n_iter=5, return_filters=True)
+        try:
+            Y, filter_state = pra.bss.auxiva(X, n_iter=5, return_filters=True)
+        except:
+            return mix_audio, state
     unmix = stft.synthesis(Y)
 
     #save filters state and overlap data
@@ -71,9 +73,8 @@ def auxvia(mix_audio: np.array, state: dict, options: dict):
     state['stft'] = stft
     return unmix.T, state
 
+
 def ILRMA(mix_audio: np.array, state: dict, options: dict):
-    '''I rewrite it to use windows, now separation more clear but calc time is increased'''
-    # print(np.linalg.det(mix_audio))
     if 'stft' not in state:
         L = options['stft_size']
         hop = L // 2
@@ -91,7 +92,10 @@ def ILRMA(mix_audio: np.array, state: dict, options: dict):
             return mix_audio, state
     # stft = pra.transform.STFT(L, hop=hop, analysis_window=window, channels=mix_audio.shape[0])
     else:
-        Y, filter_state = pra.bss.ilrma(X, n_iter=5, return_filters=True, proj_back=True)
+        try:
+            Y, filter_state = pra.bss.ilrma(X, n_iter=5, return_filters=True, proj_back=True)
+        except:
+            return mix_audio, state
     unmix = stft.synthesis(Y)
 
     # save filters state and overlap data
@@ -99,8 +103,3 @@ def ILRMA(mix_audio: np.array, state: dict, options: dict):
     state['stft'] = stft
     return unmix.T, state
 
-
-    #if "Filter_state" in state:
-    #    Y, filter_state = pra.bss.ilrma(X, n_iter=5, W0=state['Filter_state'], return_filters=True, proj_back=True)
-    #else:
-    #    Y, filter_state = pra.bss.ilrma(X, n_iter=5, return_filters=True, proj_back=True)
