@@ -45,7 +45,9 @@ def main():
             print('\033[35mMixing signals...\033[0m')
             filtered, mixed, sim = mix(S, sim, data_set)
 
-            plot_filtered(filtered, dir_sim_plots)
+            # TODO: сохранение сделал, вот только теперь проблема с normalize
+            # - после переделки она что-то меняет в filtered почему-то (см. здесь)
+            plot_filtered(filtered, dir_sim_filtered)
 
             # 4. Normalize filtered & mixed arrays
             mixed = normalize(mixed)
@@ -54,8 +56,9 @@ def main():
             sim['filtered'] = filtered
             sim['mixed'] = mixed
 
-            # TODO: не успел сохранять графики, батарейки сдохли на колонках
-            plot_filtered(filtered, dir_sim_plots)
+            # TODO: сохранение сделал, вот только теперь проблема с normalize
+            # - и см. здесь
+            plot_filtered(filtered, dir_sim_mixed)
 
             # 4.1. Save filtered & mixed to wav
             for file_name, f in zip(data_set['file_names'], filtered):
