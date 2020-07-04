@@ -7,6 +7,7 @@ from scipy.io.wavfile import write
 from mir_eval.separation import bss_eval_sources
 from datetime import datetime
 from typing import Tuple
+from pathlib import Path
 
 
 def main():
@@ -16,8 +17,9 @@ def main():
 
     # Iterate over simulations
     for sim in sims:
+        print('\033[35mSimulation \'{}\' started\033[0m'.format(sim['name']))
         # Create folders to save data
-        dir_sim, dir_sim_unmixed, dir_sim_plots = sim_create_folders(sim, dir_sims)
+        dir_sim, dir_sim_filtered, dir_sim_mixed, dir_sim_unmixed, dir_sim_plots = sim_create_folders(sim, dir_sims)
 
         # 1. Load source signals
         for data_set in sim['data_sets']:
@@ -40,7 +42,10 @@ def main():
             data_set['audio_duration'] = round(S.shape[1] / data_set['fs'], 1)
 
             # 3. Perform environment simulation (mix signals)
+            print('\033[35mMixing signals...\033[0m')
             filtered, mixed, sim = mix(S, sim, data_set)
+
+            plot_filtered(filtered, dir_sim_plots)
 
             # 4. Normalize filtered & mixed arrays
             mixed = normalize(mixed)
@@ -50,16 +55,24 @@ def main():
             sim['mixed'] = mixed
 
             # TODO: не успел сохранять графики, батарейки сдохли на колонках
-            plot(filtered)
+            plot_filtered(filtered, dir_sim_plots)
 
-            # 4.1. Create list of chunks (online version only)
+            # 4.1. Save filtered & mixed to wav
+            for file_name, f in zip(data_set['file_names'], filtered):
+                for mi, m in enumerate(f):
+                    write("{}/{}_mic_{}.wav".format(dir_sim_filtered, Path(file_name).stem, mi), data_set['fs'], np.float32(m))
+
+            for mi, m in enumerate(mixed):
+                write("{}/mic_{}.wav".format(dir_sim_mixed, mi), data_set['fs'], np.float32(m))
+
+            # 4.2. Create list of chunks (online version only)
             if sim['run_type'] == 'online':
                 mixed_queue = rework_conv(mixed, sim)
             else:
                 mixed_queue = []
 
             # 5. Run algorithms
-            print('\033[35mSeparation process:\033[0m')
+            print('\033[35mSeparating...\033[0m')
             for alg in sim['algs']:
                 # TODO: Fix correct work with chunk_size == STFT
 
@@ -89,7 +102,7 @@ def main():
                 # 5.2 Save data to wav files
                 dir_alg = alg_create_folders(alg, dir_sim_unmixed)
                 for file_name, s in zip(data_set['file_names'], unmixed):
-                    write("{}/{}".format(dir_alg, file_name), data_set['fs'], np.float32(s))
+                    write("{}/{}.wav".format(dir_alg, Path(file_name).stem), data_set['fs'], np.float32(s))
 
                 # 5.3 Compute metrics
                 alg['metrics'] = {data_set['type']: evaluate(S, sim['filtered'], unmixed)}
@@ -100,10 +113,14 @@ def main():
             # Create plots for this sim
             plot_sim_data_set_metrics(sim, data_set, dir_sim_plots)
 
+        print('\033[35mSimulation \'{}\' finished\033[0m'.format(sim['name']))
+
+    print('\033[35mSaving stuff...\033[0m')
     # Collect all metrics into new dictionary, display in in console with correct view and plot the results in folder
     rew_sims = rework_dict(sims)
     print_results(rew_sims)
     plot_metrics(rew_sims, dir_plots)
+    print('\033[35mAll done.\033[0m')
 
 
 def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) -> dict:
@@ -130,7 +147,7 @@ def create_folders() -> Tuple[str, str]:
     return dir_sims, dir_plots
 
 
-def sim_create_folders(sim: dict, dir_sims: str) -> Tuple[str, str, str]:
+def sim_create_folders(sim: dict, dir_sims: str) -> Tuple[str, str, str, str, str]:
     dir_sim = "{}/{}_{}".format(dir_sims, sim['name'], datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
     if not os.path.isdir(dir_sim):
         os.mkdir(dir_sim)
@@ -139,11 +156,19 @@ def sim_create_folders(sim: dict, dir_sims: str) -> Tuple[str, str, str]:
     if not os.path.isdir(dir_sim_unmixed):
         os.mkdir(dir_sim_unmixed)
 
+    dir_sim_filtered = "{}/filtered".format(dir_sim)
+    if not os.path.isdir(dir_sim_filtered):
+        os.mkdir(dir_sim_filtered)
+
+    dir_sim_mixed = "{}/mixed".format(dir_sim)
+    if not os.path.isdir(dir_sim_mixed):
+        os.mkdir(dir_sim_mixed)
+
     dir_sim_plots = "{}/plots".format(dir_sim)
     if not os.path.isdir(dir_sim_plots):
         os.mkdir(dir_sim_plots)
 
-    return dir_sim, dir_sim_unmixed, dir_sim_plots
+    return dir_sim, dir_sim_filtered, dir_sim_mixed, dir_sim_unmixed, dir_sim_plots
 
 
 def alg_create_folders(alg: dict, dir_sim: str) -> str:

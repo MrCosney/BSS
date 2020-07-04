@@ -43,7 +43,7 @@ def main():
                 mixed = rework_conv(mixed, sim)
 
             # TODO: не успел сохранять графики, батарейки сдохли на колонках
-            plot(filtered)
+            plot_filtered(filtered)
             # 4.1 Normalize Recorded Audio
             for i in range(len(mixed)):
                 mixed[i] = normalize(mixed[i])

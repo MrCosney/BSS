@@ -3,23 +3,37 @@ import numpy as np
 import os
 
 
-def plot(X: np.array):
+def plot_filtered(filtered: np.array, dir_plots: str):
+    """Plot filtered audio data"""
+    figure_size = (15, 7)
+
+    fig, ax = plt.subplots(filtered.shape[0], filtered.shape[1], sharex='col', sharey='row', figsize=figure_size)
+    fig.suptitle("Filtered, sources x microphones", fontsize=18, fontweight="bold")
+
+    for fi, f in enumerate(filtered):
+        for mi, m in enumerate(f):
+            ax[fi, mi].plot(m)
+            ax[fi, mi].grid()
+            ax[fi, mi].set_title("Source {}, microphone {}".format(fi+1, mi+1), fontsize=18, fontweight="bold")
+
+    plt.grid()
+    plt.savefig("{}/filtered.pdf".format(dir_plots))
+    # plt.show()
+
+
+def plot_mixed(mixed: np.array, dir_plots: str):
     """Plot filtered and audio data"""
     figure_size = (15, 7)
-    filt_plot_folder = "plots/filtered/"
-    mixed_plot_folder = "plots/mixed/"
 
-    fig, ax = plt.subplots(X.shape[0], X.shape[1], sharex='col', sharey='row', figsize=figure_size)
+    fig, ax = plt.subplots(mixed.shape[0], sharex='col', sharey='row', figsize=figure_size)
+    fig.suptitle("Mixed", fontsize=18, fontweight="bold")
     plt.grid()
-    x = 0
-    for i in X:
-        y = 0
-        for k in range(i.shape[0]):
-            ax[y, x].plot(i[y])
-            ax[y, x].grid()
-            y += 1
-        x += 1
-    #plt.show()
+    for mi, m in enumerate(mixed):
+        ax[mi].plot(m)
+        ax[mi].grid()
+        ax[mi].set_title("Microphone {}".format(mi+1), fontsize=18, fontweight="bold")
+    plt.savefig("{}/mixed.pdf".format(dir_plots))
+    # plt.show()
 
 
 def print_results(results: dict):
@@ -108,6 +122,6 @@ def plot_sim_data_set_metrics(sim: dict, data_set: dict, dir_sim_plots: str):
         fig, ax = plt.subplots(figsize=figure_size)
         ax.set_ylabel(metric_name, fontsize=14, fontweight="bold")
         ax.set_title("Sim: {}; data set: {}".format(sim['name'], ds_type), fontsize=18, fontweight="bold")
-        ax.set_xticklabels(x)
-        ax.bar(np.arange(0, len(x)), metrics[metric_name], width=bar_width)
+        ax.bar(np.arange(len(x)), metrics[metric_name], width=bar_width)
+        plt.xticks(np.arange(len(x)), x, rotation=45)
         plt.savefig("{}/{}.pdf".format(dir_sim_plots_type, metric_name))
