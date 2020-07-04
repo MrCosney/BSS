@@ -162,7 +162,6 @@ def mix_experimental(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray
     filtered = record_filtered(S, recorder, idxs)
 
     # 5. Play and record all source data at the same time.
-    recorder.flush()  # clear data from filtered
     mixed = record_mixed(S, recorder, idxs)
 
     return filtered, mixed, {'recorder': recorder}
@@ -189,12 +188,6 @@ def speakers_device_idx():
 
 def record_filtered(S: np.ndarray, recorder: Recorder, idxs: list) -> np.ndarray:
     """Play each source separately for form the Filtered data"""
-
-    # TODO: Иногда из за кривого опредленения длительности,
-    #       размеры листов записанных чанков для разных треков могут не совпадать, тогда выкинет ошибку
-    #       -> просто перезапустить
-    # UPD:  С округлением даты записи до 1 числа после запятой ошибки не возникло в 10 тестах
-
     filtered = []
 
     for idx, s in zip(idxs, S):
@@ -206,7 +199,6 @@ def record_filtered(S: np.ndarray, recorder: Recorder, idxs: list) -> np.ndarray
         rThread.join()
         sThread.join()
         filtered.append(recorder.get_data())
-
     filtered = np.array(filtered)
 
     return np.array(filtered)

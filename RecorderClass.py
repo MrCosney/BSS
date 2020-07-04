@@ -15,14 +15,12 @@ class Recorder:
         self.__callbackFlag = None
         self._data = []
 
-    def flush(self):
-        self._data = []
-
     def get_data(self) -> np.ndarray:
         return np.concatenate(self._data, axis=1)
 
     def record(self):
         print('\t \033[31mRecorder:\033[0m', ' Audio is Recording by ', self._channels, ' Microphones...')
+        self._data = []
         self.__callbackFlag = pyaudio.paContinue
         self.__stream = self.__p.open(format=pyaudio.paFloat32,
                                       rate=self._rate,

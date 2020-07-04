@@ -34,30 +34,22 @@ def main():
             S = form_source_matrix(S)
             S = normalize_rowwise(np.array(S))
 
-            # fig, ax = plt.subplots(3, 3, sharex='col', sharey='row')
-            # ax[0, 1].plot(X[0])
-            # plt.show()
-
-            # Todo: разобраться с корректной длительностью записи
             data_set['audio_duration'] = round(S.shape[1] / data_set['fs'], 1)
 
             # 3. Perform environment simulation (mix signals)
             print('\033[35mMixing signals...\033[0m')
             filtered, mixed, sim = mix(S, sim, data_set)
 
-            # TODO: сохранение сделал, вот только теперь проблема с normalize
-            # - после переделки она что-то меняет в filtered почему-то (см. здесь)
             plot_filtered(filtered, dir_sim_filtered)
 
             # 4. Normalize filtered & mixed arrays
             mixed = normalize(mixed)
             for f in filtered:
-                filtered[...] = normalize(f)
+                for i in range(f.shape[0]):
+                    f[i] = normalize(f[i])
             sim['filtered'] = filtered
             sim['mixed'] = mixed
 
-            # TODO: сохранение сделал, вот только теперь проблема с normalize
-            # - и см. здесь
             plot_filtered(filtered, dir_sim_mixed)
 
             # 4.1. Save filtered & mixed to wav
@@ -132,7 +124,7 @@ def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) ->
     Sn = np.minimum(unmixed.shape[0], ref.shape[0])
     SDR, SIR, SAR, P = bss_eval_sources(ref[: Sn, :Ns, 0], unmixed[: Sn, :Ns])
     # TODO: RMSE was removed because of Singular Matrix error, uncomment for check
-    return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P, 'RMSE': rmse(original, unmixed)}
+    return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P} #'RMSE': rmse(original, unmixed)}
     # return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P}
 
 

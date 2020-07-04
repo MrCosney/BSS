@@ -12,7 +12,8 @@ def plot_filtered(filtered: np.array, dir_plots: str):
 
     for fi, f in enumerate(filtered):
         for mi, m in enumerate(f):
-            ax[fi, mi].plot(m)
+            #TODO: Сейчас строит только первые 20к отсчетов для отслеживания задержки
+            ax[fi, mi].plot(m[:20000])
             ax[fi, mi].grid()
             ax[fi, mi].set_title("Source {}, microphone {}".format(fi+1, mi+1), fontsize=18, fontweight="bold")
 

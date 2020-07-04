@@ -30,8 +30,8 @@ def setups():
         # Convolutive for 3 microphones
         {
             'name': 'Convolutive_3',
-            'mix_type': 'convolutive',  # 'linear', 'convolutive', 'experimental'
-            'run_type': 'batch',  # 'batch', 'online'
+            'mix_type': 'experimental',  # 'linear', 'convolutive', 'experimental'
+            'run_type': 'online',  # 'batch', 'online'
             'microphones': 3,
             'microphones_distance': 0.1,
             'data_sets': data_sets,
