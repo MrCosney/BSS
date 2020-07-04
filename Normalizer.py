@@ -13,7 +13,23 @@ def form_source_matrix(S_input: list) -> np.ndarray:
     return np.vstack(S)
 
 
-def normalization(S: np.ndarray) -> np.ndarray:
+def normalize_rowwise(S: np.ndarray) -> np.ndarray:
+    S = np.float64(S)
+    for i in range(S.shape[0]):
+        S[i] = normalize(S[i])
+    return S
+
+
+def normalize(s: np.ndarray) -> np.ndarray:
+    s = np.float64(s)
+    span = np.max(s) - np.min(s)
+    span = 1 if span == 0 else span  # safety check to avoid division by zero
+    minim = np.min(s)
+    s = ((s - minim) * 2) / span - 1
+    return s
+
+
+def normalize_old(S: np.ndarray) -> np.ndarray:
     if S.shape[0] < 7:
         for i in range(S.shape[0]):
             S[i] = ((np.float64(S[i]) - np.float64(min(S[i]))) * 2) / (np.float64(np.max(S[i])) - np.float64(min(S[i]))) - 1
@@ -23,8 +39,8 @@ def normalization(S: np.ndarray) -> np.ndarray:
 
 
 def rmse(original, unmixed):
-    '''Return the array with RMSE for each source signal'''
-    # Compute max length of the vector and resize others with it for coreect RMSE calculation
+    """Return the array with RMSE for each source signal"""
+    # Compute max length of the vector and resize others with it for correct RMSE calculation
     sources = original.shape[0]
     mics = unmixed.shape[0]
     length = 0
@@ -34,14 +50,14 @@ def rmse(original, unmixed):
         if len(unmixed[i]) > length:
             length = len(unmixed[i])
 
-    #pad zeroes to make both equal
+    # pad zeroes to make both equal
     orig_t = np.zeros((sources, length))
     unmixed_t = np.zeros((mics, length))
     for i in range(mics):
         orig_t[i][:original[i].shape[0]] = original[i]
         unmixed_t[i][:unmixed[i].shape[0]] = unmixed[i]
 
-    #find all possible options for RMSE
+    # find all possible options for RMSE
     rmse_t = []
     for i in range(mics):
         for k in range(mics):
@@ -56,17 +72,23 @@ def rmse(original, unmixed):
     return np.round(rmse, 4)
 
 
-def rework_conv(mixed, sim):
-    '''Rework the convolutive data into chunks, for Real-Time emulation'''
+def rework_conv(mixed: np.ndarray, sim: dict) -> list:
+    """Rework the convolutive data into chunks, for Real-Time emulation"""
 
-    n_chunks = (len(mixed[0]) // sim['chunk_size']) * sim['chunk_size']
-    pad_number = sim['chunk_size'] - (len(mixed[0]) - n_chunks)
-    temp_mix = np.zeros((mixed.shape[0], len(mixed[1]) + np.round(pad_number)), dtype=float)
-    temp_mix[:mixed.shape[0], :mixed.shape[1]] = mixed
+    # Parameters
+    S_CH = sim['chunk_size']
+    M = mixed.shape[0]
+    Ns = mixed.shape[1]
 
-    mix_queue = []
-    # fill list of chunks with fragmented mix data
-    for chunk in range(int(len(temp_mix[0]) / sim['chunk_size'])):
-        mix_queue.append(temp_mix[:mixed.shape[0], sim['chunk_size'] * chunk: sim['chunk_size'] * (chunk + 1)])
+    # Padding
+    Ns_CH = (Ns // S_CH) * S_CH
+    pad_number = S_CH - (Ns - Ns_CH)
+    mixed_padded = np.zeros((M, Ns + np.round(pad_number)), dtype=float)
+    mixed_padded[:M, :Ns] = mixed
 
-    return mix_queue
+    # Splitting into chunks - fill list of chunks with fragmented mixed data
+    mixed_queue = []
+    for chunk in range(int(len(mixed_padded[0]) / S_CH)):
+        mixed_queue.append(mixed_padded[:M, S_CH * chunk: S_CH * (chunk + 1)])
+
+    return mixed_queue

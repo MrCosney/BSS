@@ -17,7 +17,7 @@ def mix(s_input: np.ndarray, sim: dict, data_set: dict):
     if mix_type == 'linear':
         [filtered, mixed, mao] = mix_linear(S, sim)
     elif mix_type == 'convolutive':
-        [filtered, mixed, mao] = mix_convolutive(S, sim)
+        [filtered, mixed, mao] = mix_convolutive(S, sim, data_set)
     elif mix_type == 'experimental':
         [filtered, mixed, mao] = mix_experimental(S, sim, data_set)
     else:
@@ -32,7 +32,7 @@ def mix_linear(S: np.ndarray, sim: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
     # Get parameters
     opts = sim['options']
     N = S.shape[0]  # number of sources
-    M = sim['microphones'] if 'microphones' in sim else M = N  # number of microphones
+    M = sim['microphones'] if 'microphones' in sim else N  # number of microphones
 
     # Adding noise to signals
     if 'sigma2_awgn' in opts.values():
@@ -55,20 +55,20 @@ def mix_linear(S: np.ndarray, sim: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
 
 
 def hexagonal_points(d: float) -> np.ndarray:
-    return d * np.array([[-1, 0],
-                         [-1 / 2, 3 ** 0.5 / 2],
-                         [-1 / 2, -3 ** 0.5 / 2],
-                         [0, 0],
-                         [1 / 2, 3 ** 0.5 / 2],
-                         [1 / 2, -3 ** 0.5 / 2],
-                         [1, 0]])
+    return d * np.array([[-1, 0, 0],
+                         [-1 / 2, 3 ** 0.5 / 2, 0],
+                         [-1 / 2, -3 ** 0.5 / 2, 0],
+                         [0, 0, 0],
+                         [1 / 2, 3 ** 0.5 / 2, 0],
+                         [1 / 2, -3 ** 0.5 / 2, 0],
+                         [1, 0, 0]])
 
 
-def mix_convolutive(S: np.array, sim: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
+def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
     # Get parameters
     opts = sim['options']
     N = S.shape[0]  # number of sources
-    M = sim['microphones'] if 'microphones' in sim else M = N  # number of microphones
+    M = sim['microphones'] if 'microphones' in sim else N  # number of microphones
 
     # Some parameters from example on https://pyroomacoustics.readthedocs.io/en/pypi-release/pyroomacoustics.room.html
     # The desired reverberation time and dimensions of the room
@@ -78,13 +78,14 @@ def mix_convolutive(S: np.array, sim: dict) -> Tuple[np.ndarray, np.ndarray, dic
 
     # Create room
     room = pra.ShoeBox(opts['room_dim'],
-                       fs=opts['fs'],
+                       fs=data_set['fs'],
                        materials=pra.Material(e_absorption),
                        max_order=max_order,
                        sigma2_awgn=opts['sigma2_awgn'])
 
     # Microphone locations for hexagonal array
-    micro_locs = hexagonal_points(sim['microphones_distance'])
+    array_loc = np.array([[3, 3, 1]])
+    micro_locs = array_loc + hexagonal_points(sim['microphones_distance'])
 
     # Check that required number of microphones has it's locations
     if micro_locs.shape[0] < M:
@@ -140,7 +141,7 @@ def mix_experimental(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray
     # Get parameters
     opts = sim['options']
     N = S.shape[0]  # number of sources
-    M = sim['microphones'] if 'microphones' in sim else M = N  # number of microphones
+    M = sim['microphones'] if 'microphones' in sim else N  # number of microphones
 
     # 1. Apply volume gain
     S = S * opts['volume_gain']

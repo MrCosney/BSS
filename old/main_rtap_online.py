@@ -6,6 +6,7 @@ from plots import *
 from scipy.io.wavfile import write
 from mir_eval.separation import bss_eval_sources
 
+
 def main():
     sims, data_sets = setups()
 
@@ -25,7 +26,7 @@ def main():
                     X.append(wav)
             # 2. Normalize & format source signals
             X = form_source_matrix(X)
-            X = normalization(np.array(X))
+            X = normalize(np.array(X))
 
             #fig, ax = plt.subplots(3, 3, sharex='col', sharey='row')
             #ax[0, 1].plot(X[0])
@@ -35,23 +36,23 @@ def main():
             data_set['audio_duration'] = round(len(X[0]) / data_set['fs'], 1)
 
             # 3. Perform environment simulation (mix signals)
-            sim['options']['fs'] = data_set['fs']  # sampling frequency depends on the used data set
-            filtered, mixed, sim['mix_additional_outputs'] = mix(X, data_set, sim)
+            filtered, mixed, sim = mix(X, sim, data_set)
+
             # 3.1 Rework online-recording shape for convolutive method
             if sim['mix_type'] == 'convolutive':
                 mixed = rework_conv(mixed, sim)
 
-            #TODO: не успел сохранять графики, батарейки сдохли на колонках
+            # TODO: не успел сохранять графики, батарейки сдохли на колонках
             plot(filtered)
             # 4.1 Normalize Recorded Audio
             for i in range(len(mixed)):
-                mixed[i] = normalization(mixed[i])
+                mixed[i] = normalize(mixed[i])
             sim['mixed'] = mixed
             # 4.2 Normalize Filtered data
-            #sim['filtered'] = normalization(filtered)
-            #TODO: ложус спат не успел посмотреть, после этого пункт ниже, все филтеред срезы становятся одинаковые
+            # sim['filtered'] = normalization(filtered)
+            # TODO: ложус спат не успел посмотреть, после этого пункт ниже, все филтеред срезы становятся одинаковые
             for f in filtered:
-                filtered[...] = normalization(f)
+                filtered[...] = normalize(f)
             sim['filtered'] = filtered
 
             # 5 Create folders for save data
@@ -81,7 +82,7 @@ def main():
                     write("".join((alg_dir, data_set['file_names'][i])), data_set['fs'], np.float32(recovered_data[i]))
 
                 # 6.2 Normalize the unmixed data and calculate metrics
-                alg['unmixed'] = normalization(recovered_data)
+                alg['unmixed'] = normalize(recovered_data)
                 alg['metrics'] = {data_set['type']: evaluate(X, sim['filtered'], alg['unmixed'])}
 
             # delete temporary "mixed" array form dict
@@ -93,7 +94,7 @@ def main():
 
 
 def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) -> dict:
-    '''Evaluate the metrics'''
+    """Evaluate the metrics"""
     ref = np.moveaxis(filtered, 1, 2)
     Ns = np.minimum(unmixed.shape[1], ref.shape[1])
     Sn = np.minimum(unmixed.shape[0], ref.shape[0])
@@ -105,5 +106,3 @@ def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) ->
 
 if __name__ == "__main__":
     main()
-
-#, 'RMSE': rmse(original, unmixed)

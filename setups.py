@@ -1,6 +1,5 @@
 from algs.Algorithms import *
 from Olegs import shullers_method
-from scipy import signal
 
 
 def setups():
@@ -11,7 +10,7 @@ def setups():
         {
             'type': 'Voice',
             'fs': 44100,
-            #'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
+            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
             'data': ["Audio/Original/Kunkka.wav", "Audio/Original/Ench.wav", "Audio/Original/Timber.wav"],
             'file_names': ["Man.wav", "Woman.wav", "Announcer.wav"]
         },
@@ -28,10 +27,11 @@ def setups():
     ]
 
     sims = [
-        # Convolutive for 2 microphones absorp: 0.35, orders: 0, awgn: 0
+        # Convolutive for 3 microphones
         {
             'name': 'Convolutive_3',
             'mix_type': 'convolutive',  # 'linear', 'convolutive', 'experimental'
+            'run_type': 'batch',  # 'batch', 'online'
             'microphones': 3,
             'microphones_distance': 0.1,
             'data_sets': data_sets,
