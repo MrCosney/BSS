@@ -3,38 +3,44 @@ import pyroomacoustics as pra
 import sys
 import copy
 from typing import Tuple
-from setups import speakers_device_idx
 from RecorderClass import Recorder
 import threading
 from Player import play
 
 
-def mix(s_input: np.ndarray, data_set: dict, sim: dict):
+def mix(s_input: np.ndarray, sim: dict, data_set: dict):
     S = copy.deepcopy(s_input)
 
     # choose mix type
     mix_type = sim['mix_type']
 
     if mix_type == 'linear':
-        return mix_linear(S, sim['options'])
+        [filtered, mixed, mao] = mix_linear(S, sim)
     elif mix_type == 'convolutive':
-        return mix_convolutive(S, sim['options'])
-    elif mix_type == 'convolutive_real':
-        return mix_record(S, data_set, sim)
+        [filtered, mixed, mao] = mix_convolutive(S, sim)
+    elif mix_type == 'experimental':
+        [filtered, mixed, mao] = mix_experimental(S, sim, data_set)
     else:
-        print("\033[31m {}".format('Error : Simulation is chosen wrong!'))
+        print("\033[31m {}".format('Error: Simulation is chosen wrong!'))
         sys.exit()
 
+    sim['mix_additional_outputs'] = mao
+    return filtered, mixed, sim
 
-def mix_linear(S: np.ndarray, opts: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
+
+def mix_linear(S: np.ndarray, sim: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
+    # Get parameters
+    opts = sim['options']
+    N = S.shape[0]  # number of sources
+    M = sim['microphones'] if 'microphones' in sim else M = N  # number of microphones
+
     # Adding noise to signals
     if 'sigma2_awgn' in opts.values():
         S += opts['sigma2_awgn'] * np.random.normal(size=S.shape)
 
     # Create linear mixing matrix
-    M = S.shape[0]  # number of microphones
     corr_coef = 0.5  # "correlation" coefficient
-    A = (1 - corr_coef) * np.identity(M) + corr_coef * np.ones(M)
+    A = (1 - corr_coef) * np.eye(M, N) + corr_coef * np.ones(M, N)
 
     # "filtered" are the "convolved" (in linear case just multiplied with a scalar coefficient)
     #  but not summed signals
@@ -48,15 +54,21 @@ def mix_linear(S: np.ndarray, opts: dict) -> Tuple[np.ndarray, np.ndarray, dict]
     return filtered, mixed, {'mixing_matrix': A}
 
 
-def mix_convolutive(S: np.array, opts: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
+def hexagonal_points(d: float) -> np.ndarray:
+    return d * np.array([[-1, 0],
+                         [-1 / 2, 3 ** 0.5 / 2],
+                         [-1 / 2, -3 ** 0.5 / 2],
+                         [0, 0],
+                         [1 / 2, 3 ** 0.5 / 2],
+                         [1 / 2, -3 ** 0.5 / 2],
+                         [1, 0]])
 
-    for i in range(S.shape[0]):
-        S[i].resize((len(S[i]),))
 
+def mix_convolutive(S: np.array, sim: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
+    # Get parameters
+    opts = sim['options']
     N = S.shape[0]  # number of sources
-    M = N  # number of microphones
-    # ToDo: think about how M is set - currently we resort to "determined" case (M = N),
-    # ToDo: but in general it might be something else
+    M = sim['microphones'] if 'microphones' in sim else M = N  # number of microphones
 
     # Some parameters from example on https://pyroomacoustics.readthedocs.io/en/pypi-release/pyroomacoustics.room.html
     # The desired reverberation time and dimensions of the room
@@ -71,35 +83,34 @@ def mix_convolutive(S: np.array, opts: dict) -> Tuple[np.ndarray, np.ndarray, di
                        max_order=max_order,
                        sigma2_awgn=opts['sigma2_awgn'])
 
-    # Place the mic. array into the room
-    if M == 3:
-        # 3 micro case
-        R = np.c_[
-            [3, 2.87, 1],  # microphone 1
-            [3, 2.93, 1],  # microphone 2
-            [3, 2.99, 1],  # microphone 3
-        ]
-    elif M == 2:
-        # 2 micro case
-        R = np.c_[
-            [3, 2.87, 1],  # microphone 1
-            [3, 2.93, 1]   # microphone 2
-        ]
-    else:
-        print("Error: wrong number of microphones")
-        sys.exit()
+    # Microphone locations for hexagonal array
+    micro_locs = hexagonal_points(sim['microphones_distance'])
+
+    # Check that required number of microphones has it's locations
+    if micro_locs.shape[0] < M:
+        raise ValueError('{} microphones required, but only {} microphone locations specified'
+                         .format(M, micro_locs.shape[0]))
+
+    # Select as much microphones as needed
+    R = micro_locs[:M, :]
+
     room.add_microphone_array(pra.MicrophoneArray(R, room.fs))
 
     # Place the sources inside the room
-    source_locations = [
-        [3., 2., 1.8],  # source 1
-        [6., 4., 1.8],  # source 2
-        [2., 4.5, 1.8], # source 3
-    ]
+    source_locs = np.array([
+        [3., 2., 1.8],   # source 1
+        [6., 4., 1.8],   # source 2
+        [2., 4.5, 1.8],  # source 3
+    ])
+
+    # Check that required number of microphones has it's locations
+    if source_locs.shape[0] < N:
+        raise ValueError('{} sources required, but only {} source locations specified'
+                         .format(N, source_locs.shape[0]))
 
     # At first we add empty sources in order to record each source separately for SDR/SIR computation later
     # (according to https://github.com/LCAV/pyroomacoustics/blob/pypi-release/examples/bss_example.py)
-    for sig, loc in zip(S, source_locations):
+    for sig, loc in zip(S, source_locs):
         room.add_source(loc, signal=np.zeros_like(sig))
 
     # Make separate recordings
@@ -114,6 +125,7 @@ def mix_convolutive(S: np.array, opts: dict) -> Tuple[np.ndarray, np.ndarray, di
 
         # Unset that source's signal (for next iterations)
         source.signal[:] = 0
+
     filtered = np.array(filtered)
 
     # Now mixed signals is just the sum
@@ -122,62 +134,98 @@ def mix_convolutive(S: np.array, opts: dict) -> Tuple[np.ndarray, np.ndarray, di
     return filtered, mixed, {'room_object': room}
 
 
-def mix_record(X:np.array, data_set: dict, sim: dict):
-    '''Play audio data on Speakers and Record via MiniDSP'''
+def mix_experimental(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
+    """Play audio data on Speakers and Record via MiniDSP"""
 
-    # 1. Setup the Voliume of produced data and setup the Recorder
-    vol_gain = 5000
-    idx = speakers_device_idx()
-    X = X * vol_gain
-    recorder = Recorder(kwargs=({'fs': data_set['fs'],
-                                 'chunk_size': sim['chunk_size'],
-                                 'audio_duration': data_set['audio_duration'],
-                                 'microphones': sim['microphones']}))
+    # Get parameters
+    opts = sim['options']
+    N = S.shape[0]  # number of sources
+    M = sim['microphones'] if 'microphones' in sim else M = N  # number of microphones
 
-    # 2. Play each source separatly and form the Filtered data
-    filtered = filtered_real_data(X, recorder, idx)
+    # 1. Apply volume gain
+    S = S * opts['volume_gain']
 
-    # 3. Make threads for each speaker. Play and record all source data in the same time.
-    print('\033[96mStarting record the mixing data...\033[0m')
-    threads = []
-    for i in range(len(idx)):
-        threads.append(threading.Thread(target=play, args=(X[i], idx[i])))
+    # 2. Get available speakers
+    idxs = speakers_device_idx()
+    if len(idxs) < N:
+        raise ValueError('{} sources required, but only {} speakers available'
+                         .format(N, len(idxs)))
 
-    rec = threading.Thread(target=recorder._record)
-    rec.start()
-    for thread in threads:
-        thread.start()
-    rec.join()
+    # 3. Setup the Recorder
+    recorder = Recorder(fs=data_set['fs'],
+                        chunk_size=sim['chunk_size'],
+                        audio_duration=data_set['audio_duration'],
+                        microphones=M)
 
-    return filtered, recorder._data, {'recorder': recorder}
+    # 4. Play each source separately and form the 'filtered' data
+    filtered = record_filtered(S, recorder, idxs)
+
+    # 5. Play and record all source data at the same time.
+    recorder.flush()  # clear data from filtered
+    mixed = record_mixed(S, recorder, idxs)
+
+    return filtered, mixed, {'recorder': recorder}
 
 
+def speakers_device_idx():
+    """This functions get device index for output source data to speakers"""
+    import pyaudio
 
-def filtered_real_data(X, recorder, idx):
-    '''Play each source separatly for form the Filtered data '''
-    #TODO: Иногда из за кривого опредленения длительности,
-    #      размеры листов записанных чанков для разных треков могут не совпадать, тогда выкинет ошибку
-    #      -> просто перезапустить
-    # UPD: С округлением даты записи до 1 числа после запятой ошибки не возникло в 10 тестах
-    import time
+    p = pyaudio.PyAudio()
+    device_idx = []
+    print('\033[96mList of Speakers:\033[0m')
+    for i in range(p.get_device_count()):
+        if "TF-PS1234B Stereo" in p.get_device_info_by_index(i)['name']:
+            print("\t", p.get_device_info_by_index(i)['name'])
+            device_idx.append(i)
 
-    filtered_temp = []
-    for i in range(X.shape[0]):
-        rec = threading.Thread(target=recorder._record)
-        try:
-            s = threading.Thread(target=play, args=(X[i], idx[i]))
-        except IndexError:
-            break
-        print('\033[96mStarting record the filtered source \033[0m')
-        rec.start()
-        s.start()
-        rec.join()
-        time.sleep(2)
-        filtered_temp.append(recorder._data)
+    if len(device_idx) == 0:
+        print("\033[31m {}" .format('Error : No Speakers!'))
+        sys.exit()
+
+    return device_idx
+
+
+def record_filtered(S: np.ndarray, recorder: Recorder, idxs: list) -> np.ndarray:
+    """Play each source separately for form the Filtered data"""
+
+    # TODO: Иногда из за кривого опредленения длительности,
+    #       размеры листов записанных чанков для разных треков могут не совпадать, тогда выкинет ошибку
+    #       -> просто перезапустить
+    # UPD:  С округлением даты записи до 1 числа после запятой ошибки не возникло в 10 тестах
 
     filtered = []
-    for i in range(len(filtered_temp)):
-        filtered.append(np.concatenate(filtered_temp[i], axis=1))
+
+    for idx, s in zip(idxs, S):
+        rThread = threading.Thread(target=recorder.record)
+        sThread = threading.Thread(target=play, args=(s, idx))
+        print('\033[96mStart recording the filtered data...\033[0m')
+        rThread.start()
+        sThread.start()
+        rThread.join()
+        sThread.join()
+        filtered.append(recorder.get_data())
+
+    filtered = np.array(filtered)
 
     return np.array(filtered)
+
+
+def record_mixed(S: np.ndarray, recorder: Recorder, idxs: list) -> np.ndarray:
+    print('\033[96mStart recording the mixed data...\033[0m')
+
+    # Create speaker threads
+    sThreads = []
+    for idx, s in zip(idxs, S):
+        sThreads.append(threading.Thread(target=play, args=(s, idx)))
+
+    rThread = threading.Thread(target=recorder.record)
+    rThread.start()
+    for sThread in sThreads:
+        sThread.start()
+    rThread.join()
+    for sThread in sThreads:
+        sThread.join()
+
+    return recorder.get_data()
 

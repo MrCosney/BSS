@@ -31,13 +31,12 @@ def setups():
         # Convolutive for 2 microphones absorp: 0.35, orders: 0, awgn: 0
         {
             'name': 'Convolutive_3',
-                        #'mix_type': 'linear', 'convolutive', 'convolutive_real'
-            'mix_type': 'convolutive',
+            'mix_type': 'convolutive',  # 'linear', 'convolutive', 'experimental'
             'microphones': 3,
+            'microphones_distance': 0.1,
             'data_sets': data_sets,
             'chunk_size': 2048,
-            # 'options': {'absorp': 0.35, 'orders': 0, 'sigma2_awgn': 0},
-            'options': {'rt60': 0.5, 'room_dim': [7, 5, 3.2], 'sigma2_awgn': 0},
+            'options': {'rt60': 0.5, 'room_dim': [7, 5, 3.2], 'sigma2_awgn': 0, 'volume_gain': 5000},
             'algs': [
                 {
                     'name': 'AUXIVA_512', 'func': auxiva, 'state': {}, 'options': {'stft_size': 512}, 'metrics': {}
@@ -64,23 +63,3 @@ def setups():
         }
     ]
     return sims, data_sets
-
-
-def speakers_device_idx():
-    """This functions get device index for output source data to speakers"""
-    import pyaudio
-    import sys
-
-    p = pyaudio.PyAudio()
-    device_idx = []
-    print('\033[96mList of Speakers:\033[0m')
-    for i in range(p.get_device_count()):
-        if "TF-PS1234B Stereo" in p.get_device_info_by_index(i)['name']:
-            print("\t", p.get_device_info_by_index(i)['name'])
-            device_idx.append(i)
-
-    if len(device_idx) == 0:
-        print("\033[31m {}" .format('Error : No Speakers!'))
-        sys.exit()
-
-    return device_idx

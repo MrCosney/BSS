@@ -25,12 +25,13 @@ def main():
                     X.append(load_wav(wav, data_set['fs']))
                 else:
                     X.append(wav)
+
             # 2. Normalize & format source signals
             X = form_source_matrix(X)
             X = normalization(np.array(X))
+
             # 3. Perform environment simulation (mix signals)
-            sim['options']['fs'] = data_set['fs']  # sampling frequency depends on the used data set
-            filtered, mixed, sim['mix_additional_outputs'] = mix(X, sim['mix_type'], sim['options'])
+            filtered, mixed, sim = mix(X, sim, data_set)
 
             # 4. Normalize filtered & mixed arrays
             sim['mixed'] = normalization(mixed)

@@ -6,18 +6,22 @@ import time
 class Recorder:
     def __init__(self, **kwargs):
         self.__p = pyaudio.PyAudio()
-        self.kwargs = kwargs['kwargs']
-        self._rate = self.kwargs['fs'] if 'fs' in self.kwargs else 44100
-        self._chunk_size = self.kwargs['chunk_size'] if 'chunk_size' in self.kwargs else 2048
-        self._audio_duration = self.kwargs['audio_duration'] if 'audio_duration' in self.kwargs else 4
-        self._channels = self.kwargs['microphones'] if 'microphones' in self.kwargs else 2
+        self._rate = kwargs['fs'] if 'fs' in kwargs else 44100
+        self._chunk_size = kwargs['chunk_size'] if 'chunk_size' in kwargs else 2048
+        self._audio_duration = kwargs['audio_duration'] if 'audio_duration' in kwargs else 4
+        self._channels = kwargs['microphones'] if 'microphones' in kwargs else 2
         self.device_idx = self.device_idx()
         self.__stream = None
         self.__callbackFlag = None
-        self._data = None
-
-    def _record(self):
         self._data = []
+
+    def flush(self):
+        self._data = []
+
+    def get_data(self) -> np.ndarray:
+        return np.concatenate(self._data, axis=1)
+
+    def record(self):
         print('\t \033[31mRecorder:\033[0m', ' Audio is Recording by ', self._channels, ' Microphones...')
         self.__callbackFlag = pyaudio.paContinue
         self.__stream = self.__p.open(format=pyaudio.paFloat32,
@@ -31,12 +35,12 @@ class Recorder:
         # TODO: Make normal stop that depends on audio duration
         while self.__stream.is_active():
             time.sleep(self._audio_duration)
-            self._stop_record()
+            self.stop_record()
         self.__stream.close()
 
         return self._data
 
-    def _stop_record(self):
+    def stop_record(self):
         self.__callbackFlag = pyaudio.paComplete
         self.__stream.stop_stream()
         print('\t\033[31m Recorder:\033[0m', ' Audio is Recorded.')
