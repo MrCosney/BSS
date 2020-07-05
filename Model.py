@@ -61,7 +61,7 @@ def hexagonal_points(d: float) -> np.ndarray:
                          [0, 0, 0],
                          [1 / 2, 3 ** 0.5 / 2, 0],
                          [1 / 2, -3 ** 0.5 / 2, 0],
-                         [1, 0, 0]])
+                         [1, 0, 0]]).T
 
 
 def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
@@ -84,8 +84,9 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
                        sigma2_awgn=opts['sigma2_awgn'])
 
     # Microphone locations for hexagonal array
-    array_loc = np.array([[3, 3, 1]])
-    micro_locs = array_loc + hexagonal_points(sim['microphones_distance'])
+    array_loc = np.array([[3], [3], [1]])
+    micro_locs = hexagonal_points(sim['microphones_distance'])
+    micro_locs += array_loc
 
     # Check that required number of microphones has it's locations
     if micro_locs.shape[0] < M:
@@ -93,7 +94,7 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
                          .format(M, micro_locs.shape[0]))
 
     # Select as much microphones as needed
-    R = micro_locs[:M, :]
+    R = micro_locs[:, :M]
 
     room.add_microphone_array(pra.MicrophoneArray(R, room.fs))
 

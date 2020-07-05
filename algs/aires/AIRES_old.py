@@ -156,25 +156,21 @@ def playsound(audio, samplingRate, channels):
     return
 
 
-def shullers_method(mix_audio: np.array, state: dict, options):
-    data = mix_audio.T
-    sources = data * 1.0 / 2 ** 15
-    sources *= 0.5
+def shullers_method(mixed: np.array, state: dict, options):
+    # Prepare mixed
+    mixed = mixed.T * 0.5 / 2 ** 15
 
-    X = np.zeros(sources.shape)
+    X = np.zeros(mixed.shape)
 
-    coeffs = np.array([0.9, 0.9, 5, 5])
-    # sinwin = np.sin(np.pi / 30 * (np.arange(30) + 0.5))
+    coefficients = state['coeffs'] if 'coeffs' in state else np.array([0.9, 0.9, 5, 5])
 
-    delayfilt0 = delayfilt(coeffs[2])
-    delayfilt1 = delayfilt(coeffs[3])
-    X[:, 0] = 1.0 * sources[:, 0] + coeffs[0] * scipy.signal.lfilter(delayfilt0, [1], sources[:, 1])
-    X[:, 1] = 1.0 * sources[:, 1] + coeffs[1] * scipy.signal.lfilter(delayfilt1, [1], sources[:, 0])
+    filter_delay_0 = delayfilt(coefficients[2])
+    filter_delay_1 = delayfilt(coefficients[3])
+    X[:, 0] = 1.0 * mixed[:, 0] + coefficients[0] * scipy.signal.lfilter(filter_delay_0, [1], mixed[:, 1])
+    X[:, 1] = 1.0 * mixed[:, 1] + coefficients[1] * scipy.signal.lfilter(filter_delay_1, [1], mixed[:, 0])
 
-    N = 8  # downsampling by N, can be changed
-
+    N = 8  # down sample by N, can be changed
     lp = scipy.signal.remez(63, bands=[0, 0.32 / N, 0.45 / N, 1], desired=[1, 0], weight=[1, 100], Hz=2)
-    w, H = scipy.signal.freqz(lp)
 
     Xlp = scipy.signal.lfilter(lp, [1], X, axis=0)
     Xlp = Xlp[::N, :]
@@ -183,15 +179,21 @@ def shullers_method(mix_audio: np.array, state: dict, options):
 
     bounds = [(0.0 + 1e-4, 1.0 - 1e-4), (0.0 + 1e-4, 1.0 - 1e-4), (0, 15.0), (0, 15.0)]
 
-    coeffs_minimized = opt.minimize(minabsklcoeffs, [0.0, 0.0, 0.0, 0.0], args=(X,), bounds=bounds, method='SLSQP',
-                                    options={'disp': True, 'maxiter': 200})
+    # Compute separating coefficients
+    coeffs_minimized = opt.minimize(minabsklcoeffs,
+                                    x0=np.array([0.0, 0.0, 0.0, 0.0]),
+                                    args=(X,),
+                                    bounds=bounds,
+                                    method='SLSQP',
+                                    options={'disp': False, 'maxiter': 200})
 
-    coeffs = coeffs_minimized.x
-    coeffs[2:4] *= N
-    X_del = unmixing(coeffs, Xorig)
+    coefficients = coeffs_minimized.x
+    coefficients[2:4] *= N
 
+    # Store coefficients to state
+    state['coeffs'] = coefficients
+
+    X_del = unmixing(coefficients, Xorig)
     X_del = X_del * 1.0 / np.max(abs(X_del))
 
-    # playsound(X_del[:, 0] * 2 ** 15, samplerate, 1)
-    # playsound(X_del[:, 1] * 2 ** 15, samplerate, 1)
-    return X_del.T, coeffs
+    return X_del.T, state

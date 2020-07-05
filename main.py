@@ -24,7 +24,9 @@ def main():
         # 1. Load source signals
         for data_set in sim['data_sets']:
             S = []
-            for wav in data_set['data']:
+            for si, wav in enumerate(data_set['data']):
+                if si >= sim['sources']:
+                    break
                 if type(wav) == str:
                     S.append(load_wav(wav, data_set['fs']))
                 else:
@@ -40,8 +42,6 @@ def main():
             print('\033[35mMixing signals...\033[0m')
             filtered, mixed, sim = mix(S, sim, data_set)
 
-            plot_filtered(filtered, dir_sim_filtered)
-
             # 4. Normalize filtered & mixed arrays
             mixed = normalize(mixed)
             for f in filtered:
@@ -50,9 +50,11 @@ def main():
             sim['filtered'] = filtered
             sim['mixed'] = mixed
 
-            plot_filtered(filtered, dir_sim_mixed)
+            # 4.1. Save filtered & mixed plots
+            plot_filtered(filtered, dir_sim_filtered)
+            plot_mixed(mixed, dir_sim_mixed)
 
-            # 4.1. Save filtered & mixed to wav
+            # 4.2. Save filtered & mixed to wav
             for file_name, f in zip(data_set['file_names'], filtered):
                 for mi, m in enumerate(f):
                     write("{}/{}_mic_{}.wav".format(dir_sim_filtered, Path(file_name).stem, mi), data_set['fs'], np.float32(m))
@@ -60,7 +62,7 @@ def main():
             for mi, m in enumerate(mixed):
                 write("{}/mic_{}.wav".format(dir_sim_mixed, mi), data_set['fs'], np.float32(m))
 
-            # 4.2. Create list of chunks (online version only)
+            # 4.3. Create list of chunks (online version only)
             if sim['run_type'] == 'online':
                 mixed_queue = rework_conv(mixed, sim)
             else:
@@ -76,7 +78,7 @@ def main():
                     continue
 
                 print("\tSeparation by {} in simulation {} with chunk_size={} ..."
-                      .format(alg['name'], sim['name'], sim['chunk_size']))
+                      .format(alg['name'], sim['name'], sim['chunk_size'] if 'chunk_size' in sim else '-'))
 
                 # 5.1 Run given algorithm (online or batch)
                 if sim['run_type'] == 'online':
@@ -124,8 +126,8 @@ def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) ->
     Sn = np.minimum(unmixed.shape[0], ref.shape[0])
     SDR, SIR, SAR, P = bss_eval_sources(ref[: Sn, :Ns, 0], unmixed[: Sn, :Ns])
     # TODO: RMSE was removed because of Singular Matrix error, uncomment for check
-    return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P} #'RMSE': rmse(original, unmixed)}
-    # return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P}
+    # return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P, 'RMSE': rmse(original, unmixed)}
+    return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P}
 
 
 def create_folders() -> Tuple[str, str]:
@@ -144,6 +146,7 @@ def create_folders() -> Tuple[str, str]:
 
 def sim_create_folders(sim: dict, dir_sims: str) -> Tuple[str, str, str, str, str]:
     dir_sim = "{}/{}_{}".format(dir_sims, sim['name'], datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
+    # dir_sim = "{}/{}".format(dir_sims, sim['name'])  # without date - easier for development
     if not os.path.isdir(dir_sim):
         os.mkdir(dir_sim)
 
