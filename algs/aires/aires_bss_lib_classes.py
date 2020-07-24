@@ -536,7 +536,7 @@ def offline_aires_separation(X_mixed):
     aires = aires_offline_class()
     aires.maxdelay = 20
     aires.n_iter = 20       # Number iterations in optimization for full signal
-    aires.do_downsampling_lowpass = True # do_lowpass
+    aires.do_downsampling_lowpass = True  # do_lowpass
 
     start_timer = time.time()
     X_unmixed = aires.aires_offline_separation(X_mixed)  # separate_signals

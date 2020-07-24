@@ -22,11 +22,10 @@ def normalize_rowwise(S: np.ndarray) -> np.ndarray:
 
 def normalize(s: np.ndarray) -> np.ndarray:
     s = np.float64(s)
-    span = np.max(s) - np.min(s)
-    span = 1 if span == 0 else span  # safety check to avoid division by zero
-    minim = np.min(s)
-    s = ((s - minim) * 2) / span - 1
-    return s
+    # span = np.max(s) - np.min(s)
+    # span = 1 if span == 0 else span  # safety check to avoid division by zero
+    # s = ((s - np.min(s)) * 2) / span - 1
+    return s / np.max(np.abs(s))
 
 
 def normalize_old(S: np.ndarray) -> np.ndarray:

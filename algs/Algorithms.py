@@ -32,8 +32,8 @@ def AIRES_online(mixed, state: dict, options: dict):
 
 
 def AIRES_batch(mixed, state: dict, options: dict):
-    unmixed, p_time = offline_aires_separation(mixed)
-    return unmixed, state
+    unmixed, p_time = offline_aires_separation(mixed.T)
+    return unmixed.T, state
 
 
 def AIRES_rtap(mixed, state: dict, options: dict):

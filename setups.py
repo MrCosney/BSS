@@ -1,4 +1,6 @@
 from algs.Algorithms import *
+from itertools import combinations
+from pathlib import Path
 
 
 def setups():
@@ -8,152 +10,18 @@ def setups():
     np.random.seed(0)
     n_samples = 20000
     time = np.linspace(0, 8, n_samples)
+    wav_folder = "Audio/Original"
+    # files = ["1.wav", "2.wav", "3.wav", "4.wav", "5.wav", "6.wav", "7.wav", "8.wav", "9.wav", "10.wav"]
+    files = ["1.wav", "2.wav", "3.wav"]
+    # files = ["Man.wav", "Woman.wav", "Announcer.wav"]
     data_sets = [
         {
-            'type': 'Voice',
+            'name': "".join([Path(f).stem for f in fs]),
             'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/2.wav"],
-            'file_names': ["1.wav", "2.wav"]
-         },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/3.wav"],
-            'file_names': ["1.wav", "3.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/4.wav"],
-            'file_names': ["1.wav", "4.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/5.wav"],
-            'file_names': ["1.wav", "5.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/6.wav"],
-            'file_names': ["1.wav", "6.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/7.wav"],
-            'file_names': ["1.wav", "7.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/8.wav"],
-            'file_names': ["1.wav", "8.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/9.wav"],
-            'file_names': ["1.wav", "9.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/1.wav", "Audio/Original/10.wav"],
-            'file_names': ["1.wav", "10.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/3.wav"],
-            'file_names': ["2.wav", "3.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/4.wav"],
-            'file_names': ["2.wav", "4.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/5.wav"],
-            'file_names': ["1.wav", "5.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/6.wav"],
-            'file_names': ["2.wav", "6.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/7.wav"],
-            'file_names': ["2.wav", "7.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/8.wav"],
-            'file_names': ["1.wav", "10.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/9.wav"],
-            'file_names': ["1.wav", "10.wav"]
-        },
-
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/2.wav", "Audio/Original/10.wav"],
-            'file_names': ["1.wav", "10.wav"]
-        },
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/3.wav", "Audio/Original/4.wav"],
-            'file_names': ["3.wav", "4.wav"]
-        },
-
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/3.wav", "Audio/Original/5.wav"],
-            'file_names': ["3.wav", "5.wav"]
-        },
-
-        {
-            'type': 'Voice',
-            'fs': 16000,
-            # 'data': ["Audio/Original/Man.wav", "Audio/Original/Woman.wav", "Audio/Original/Announcer.wav"],
-            'data': ["Audio/Original/3.wav", "Audio/Original/6.wav"],
-            'file_names': ["3.wav", "6.wav"]
-        }
+            'data': ['{}/{}'.format(wav_folder, f) for f in fs],
+            'file_names': [Path(f).stem for f in fs]
+        } for fs in combinations(files, 2)
     ]
-
     # Convolutive, batch, for 2 microphones
     conv_batch_2 = {
         'name': 'Convolutive_batch_2',
@@ -170,20 +38,19 @@ def setups():
             },
             {
                  'name': 'AUXIVA_10', 'func': auxiva, 'state': {}, 'options': {'stft_size': 2048, 'iter': 10}
-             },
+            },
             {
                  'name': 'AUXIVA_50', 'func': auxiva, 'state': {}, 'options': {'stft_size': 2048, 'iter': 50}
             },
             {
                 'name': 'ILRMA', 'func': ILRMA, 'state': {}, 'options': {'stft_size': 2048}
-             },
+            },
             {
                  'name': 'AIRES (rtap-opt)', 'func': AIRES_rtap, 'state': {}, 'options': {'type': 'opt'}
-             }
-            ,
+            },
             {
                 'name': 'AIRES (batch)', 'func': AIRES_batch, 'state': {}, 'options': {}
-         }
+            }
         ]
     }
 

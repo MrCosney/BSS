@@ -8,7 +8,6 @@ from mir_eval.separation import bss_eval_sources
 
 from datetime import datetime
 from typing import Tuple
-from pathlib import Path
 import numpy.linalg as nl
 
 
@@ -25,6 +24,7 @@ def main():
 
         # 1. Load source signals
         for data_set in sim['data_sets']:
+            print('\t\033[35mDataSet \'{}\' \033[0m'.format(data_set['name']))
             S = []
             for si, wav in enumerate(data_set['data']):
                 if si >= sim['sources']:
@@ -38,7 +38,7 @@ def main():
             S = normalize_rowwise(np.array(S))
             data_set['audio_duration'] = round(S.shape[1] / data_set['fs'], 1)
             # 3. Perform environment simulation (mix signals)
-            print('\033[35mMixing signals...\033[0m')
+            print('\t\t\033[35mMixing signals...\033[0m')
             filtered, mixed, sim = mix(S, sim, data_set)
 
             # 4. Normalize filtered & mixed arrays
@@ -48,17 +48,20 @@ def main():
                     f[i] = normalize(f[i])
             sim['filtered'] = filtered
             sim['mixed'] = mixed
+
             # 4.1. Save filtered & mixed plots
-            #plot_filtered(filtered, dir_sim_filtered)
-            #plot_mixed(mixed, dir_sim_mixed)
+            pr = "{}_".format(data_set['name'])
+            plot_original(S, dir_sim_mixed, pr, S.shape[1])
+            plot_filtered(filtered, dir_sim_filtered, pr, S.shape[1])
+            plot_mixed(mixed, dir_sim_mixed, pr, S.shape[1])
 
             # 4.2. Save filtered & mixed to wav
             for file_name, f in zip(data_set['file_names'], filtered):
                 for mi, m in enumerate(f):
-                    write("{}/{}_mic_{}.wav".format(dir_sim_filtered, Path(file_name).stem, mi), data_set['fs'], np.float32(m))
+                    write("{}/{}_{}_mic_{}.wav".format(dir_sim_filtered, data_set['name'], file_name, mi), data_set['fs'], np.float32(m))
 
             for mi, m in enumerate(mixed):
-                write("{}/mic_{}.wav".format(dir_sim_mixed, mi), data_set['fs'], np.float32(m))
+                write("{}/{}_mic_{}.wav".format(dir_sim_mixed, data_set['name'], mi), data_set['fs'], np.float32(m))
 
             # 4.3. Create list of chunks (online version only)
             if sim['run_type'] == 'online':
@@ -70,14 +73,14 @@ def main():
             SIR_temp = []
             SAR_temp = []
             # 5. Run algorithms
-            print('\033[35mSeparating...\033[0m')
+            print('\t\t\033[35mSeparating...\033[0m')
             for alg in sim['algs']:
 
-                if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
+                if alg['name'].find('ILRMA') == 0 and data_set['name'] == 'Gen Signals':
                     print('Warning: artificially generated signals are not used with ILRMA, skipping...')
                     continue
 
-                print("\tSeparation by {} in simulation {} with chunk_size={} ..."
+                print("\t\t\tSeparation by {} in simulation {} with chunk_size={} ..."
                       .format(alg['name'], sim['name'], sim['chunk_size'] if 'chunk_size' in sim else '-'))
 
                 # 5.1 Run given algorithm (online or batch)
@@ -100,14 +103,13 @@ def main():
                 # 5.2 Save data to wav files
                 dir_alg = alg_create_folders(alg, dir_sim_unmixed)
                 for file_name, s in zip(data_set['file_names'], unmixed):
-                    write("{}/{}.wav".format(dir_alg, Path(file_name).stem), data_set['fs'], np.float32(s))
+                    write("{}/{}_{}.wav".format(dir_alg, data_set['name'], file_name), data_set['fs'], np.float32(s))
 
                 # 5.3 Compute metrics
-                alg['metrics'] = {data_set['type']: evaluate(S, sim['filtered'], unmixed)}
-                SDR_temp.append(alg['metrics']['Voice']['SDR'])
-                SIR_temp.append(alg['metrics']['Voice']['SIR'])
-                SAR_temp.append(alg['metrics']['Voice']['SAR'])
-
+                alg['metrics'] = {data_set['name']: evaluate(S, sim['filtered'], unmixed)}
+                SDR_temp.append(alg['metrics'][data_set['name']]['SDR'])
+                SIR_temp.append(alg['metrics'][data_set['name']]['SIR'])
+                SAR_temp.append(alg['metrics'][data_set['name']]['SAR'])
 
             # delete temporary "mixed" array form dict
             del sim['mixed']
@@ -115,7 +117,7 @@ def main():
             SARR.append(SAR_temp)
             SIRR.append(SIR_temp)
             # Create plots for this sim
-            #plot_sim_data_set_metrics(sim, data_set, dir_sim_plots)
+            # plot_sim_data_set_metrics(sim, data_set, dir_sim_plots)
 
         plot_boxes(SDRR, SARR, SIRR, sim['name'], dir_sim_box_plots)
         print('\033[35mSimulation \'{}\' finished\033[0m'.format(sim['name']))
@@ -124,7 +126,7 @@ def main():
     # Collect all metrics into new dictionary, display in in console with correct view and plot the results in folder
     rew_sims = rework_dict(sims)
     print_results(rew_sims)
-    #plot_metrics(rew_sims, dir_plots)
+    # plot_metrics(rew_sims, dir_plots)
     print('\033[35mAll done.\033[0m')
     print(SDRR)
 
@@ -132,12 +134,13 @@ def main():
 def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) -> dict:
     ref = np.moveaxis(filtered, 1, 2)
     Ns = np.minimum(unmixed.shape[1], ref.shape[1])
-    #Sn = np.minimum(unmixed.shape[0], ref.shape[0])
-    #SDR, SIR, SAR, P = bss_eval_sources(unmixed[:, :Ns], ref[:, :Ns, 0])
+    # Sn = np.minimum(unmixed.shape[0], ref.shape[0])
     SDR, SIR, SAR, P = bss_eval_sources(ref[:, :Ns, 0], unmixed[:, :Ns])
-    # TODO: RMSE was removed because of Singular Matrix error, uncomment for check
     # return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P, 'RMSE': rmse(original, unmixed)}
-    return {'SDR': np.round(np.mean(SDR), 2), 'SIR': np.round(np.mean(SIR), 2), 'SAR': np.round(np.mean(SAR), 2), 'P': P}
+    return {'SDR': np.round(np.mean(SDR), 2),
+            'SIR': np.round(np.mean(SIR), 2),
+            'SAR': np.round(np.mean(SAR), 2),
+            'P': P}
 
 
 def create_folders() -> Tuple[str, str]:

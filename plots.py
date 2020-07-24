@@ -3,7 +3,22 @@ import numpy as np
 import os
 
 
-def plot_filtered(filtered: np.array, dir_plots: str, samples: int = 20000):
+def plot_original(S: np.array, dir_plots: str, name_prefix: str = "", samples: int = 20000):
+    """Plot original audio data"""
+    figure_size = (15, 7)
+
+    fig, ax = plt.subplots(S.shape[0], sharex='col', sharey='row', figsize=figure_size)
+    fig.suptitle("Original", fontsize=18, fontweight="bold")
+    plt.grid()
+    for si, s in enumerate(S):
+        ax[si].plot(s[:samples])
+        ax[si].grid()
+        ax[si].set_title("Source {}".format(si+1), fontsize=18, fontweight="bold")
+    plt.savefig("{}/{}original.pdf".format(dir_plots, name_prefix))
+    # plt.show()
+
+
+def plot_filtered(filtered: np.array, dir_plots: str, name_prefix: str = "", samples: int = 20000):
     """Plot filtered audio data"""
     figure_size = (15, 7)
 
@@ -18,14 +33,13 @@ def plot_filtered(filtered: np.array, dir_plots: str, samples: int = 20000):
             ax[fi, mi].set_title("Source {}, microphone {}".format(fi+1, mi+1), fontsize=18, fontweight="bold")
 
     plt.grid()
-    plt.savefig("{}/filtered.pdf".format(dir_plots))
+    plt.savefig("{}/{}filtered.pdf".format(dir_plots, name_prefix))
     # plt.show()
 
 
-def plot_mixed(mixed: np.array, dir_plots: str, samples: int = 20000):
+def plot_mixed(mixed: np.array, dir_plots: str, name_prefix: str = "", samples: int = 20000):
     """Plot filtered and audio data"""
     figure_size = (15, 7)
-    samples = 20000
 
     fig, ax = plt.subplots(mixed.shape[0], sharex='col', sharey='row', figsize=figure_size)
     fig.suptitle("Mixed", fontsize=18, fontweight="bold")
@@ -34,7 +48,7 @@ def plot_mixed(mixed: np.array, dir_plots: str, samples: int = 20000):
         ax[mi].plot(m[:samples])
         ax[mi].grid()
         ax[mi].set_title("Microphone {}".format(mi+1), fontsize=18, fontweight="bold")
-    plt.savefig("{}/mixed.pdf".format(dir_plots))
+    plt.savefig("{}/{}mixed.pdf".format(dir_plots, name_prefix))
     # plt.show()
 
 

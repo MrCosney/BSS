@@ -97,7 +97,7 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
     R = micro_locs[:, :M]
 
     room.add_microphone_array(pra.MicrophoneArray(R, room.fs))
-    #room.add_microphone_array(pra.Beamformer(R, room.fs))
+    # room.add_microphone_array(pra.Beamformer(R, room.fs))
     # Place the sources inside the room
     source_locs = np.array([
         [3., 3, 0.85],   # source 1
@@ -131,8 +131,8 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
 
     # Now mixed signals is just the sum
     mixed = np.sum(filtered, axis=0)
-    #room.plot(freq=[1000, 2000], img_order=0)
-    #plt.show()
+    # room.plot(freq=[1000, 2000], img_order=0)
+    # plt.show()
     return filtered, mixed, {'room_object': room}
 
 
