@@ -53,6 +53,7 @@ class aires_offline_class():
 
 
     def aires_offline_separation(self, X):
+        self.coeffs = [1.0, 1.0, 1.0, 1.0]
         X_mixed_4_separation = np.copy(X)
         X_mixed_orig = X_mixed_4_separation.copy()
 

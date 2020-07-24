@@ -5,13 +5,15 @@ from Normalizer import *
 from plots import *
 from scipy.io.wavfile import write
 from mir_eval.separation import bss_eval_sources
+
 from datetime import datetime
 from typing import Tuple
 from pathlib import Path
+import numpy.linalg as nl
 
 
 def main():
-    sims, data_sets = setups()
+    SDRR, SARR, SIRR, sims, data_sets = setups()
 
     dir_sims, dir_plots = create_folders()
 
@@ -19,7 +21,7 @@ def main():
     for sim in sims:
         print('\033[35mSimulation \'{}\' started\033[0m'.format(sim['name']))
         # Create folders to save data
-        dir_sim, dir_sim_filtered, dir_sim_mixed, dir_sim_unmixed, dir_sim_plots = sim_create_folders(sim, dir_sims)
+        dir_sim, dir_sim_filtered, dir_sim_mixed, dir_sim_unmixed, dir_sim_plots, dir_sim_box_plots = sim_create_folders(sim, dir_sims)
 
         # 1. Load source signals
         for data_set in sim['data_sets']:
@@ -31,13 +33,10 @@ def main():
                     S.append(load_wav(wav, data_set['fs']))
                 else:
                     S.append(wav)
-
             # 2. Normalize & format source signals
             S = form_source_matrix(S)
             S = normalize_rowwise(np.array(S))
-
             data_set['audio_duration'] = round(S.shape[1] / data_set['fs'], 1)
-
             # 3. Perform environment simulation (mix signals)
             print('\033[35mMixing signals...\033[0m')
             filtered, mixed, sim = mix(S, sim, data_set)
@@ -49,10 +48,9 @@ def main():
                     f[i] = normalize(f[i])
             sim['filtered'] = filtered
             sim['mixed'] = mixed
-
             # 4.1. Save filtered & mixed plots
-            plot_filtered(filtered, dir_sim_filtered)
-            plot_mixed(mixed, dir_sim_mixed)
+            #plot_filtered(filtered, dir_sim_filtered)
+            #plot_mixed(mixed, dir_sim_mixed)
 
             # 4.2. Save filtered & mixed to wav
             for file_name, f in zip(data_set['file_names'], filtered):
@@ -68,10 +66,12 @@ def main():
             else:
                 mixed_queue = []
 
+            SDR_temp = []
+            SIR_temp = []
+            SAR_temp = []
             # 5. Run algorithms
             print('\033[35mSeparating...\033[0m')
             for alg in sim['algs']:
-                # TODO: Fix correct work with chunk_size == STFT
 
                 if alg['name'].find('ILRMA') == 0 and data_set['type'] == 'Gen Signals':
                     print('Warning: artificially generated signals are not used with ILRMA, skipping...')
@@ -90,6 +90,7 @@ def main():
                     unmixed = np.concatenate(unmixed, axis=1)
                 elif sim['run_type'] == 'batch':
                     unmixed, alg['state'] = alg['func'](sim['mixed'], alg['state'], alg.get('options'))
+                    alg['state'] = {}
                 else:
                     raise ValueError('unknown run_type={}'.format(sim['run_type']))
                 unmixed = normalize_rowwise(unmixed)
@@ -103,31 +104,40 @@ def main():
 
                 # 5.3 Compute metrics
                 alg['metrics'] = {data_set['type']: evaluate(S, sim['filtered'], unmixed)}
+                SDR_temp.append(alg['metrics']['Voice']['SDR'])
+                SIR_temp.append(alg['metrics']['Voice']['SIR'])
+                SAR_temp.append(alg['metrics']['Voice']['SAR'])
+
 
             # delete temporary "mixed" array form dict
             del sim['mixed']
-
+            SDRR.append(SDR_temp)
+            SARR.append(SAR_temp)
+            SIRR.append(SIR_temp)
             # Create plots for this sim
-            plot_sim_data_set_metrics(sim, data_set, dir_sim_plots)
+            #plot_sim_data_set_metrics(sim, data_set, dir_sim_plots)
 
+        plot_boxes(SDRR, SARR, SIRR, sim['name'], dir_sim_box_plots)
         print('\033[35mSimulation \'{}\' finished\033[0m'.format(sim['name']))
 
     print('\033[35mSaving stuff...\033[0m')
     # Collect all metrics into new dictionary, display in in console with correct view and plot the results in folder
     rew_sims = rework_dict(sims)
     print_results(rew_sims)
-    plot_metrics(rew_sims, dir_plots)
+    #plot_metrics(rew_sims, dir_plots)
     print('\033[35mAll done.\033[0m')
+    print(SDRR)
 
 
 def evaluate(original: np.ndarray, filtered: np.ndarray, unmixed: np.ndarray) -> dict:
     ref = np.moveaxis(filtered, 1, 2)
     Ns = np.minimum(unmixed.shape[1], ref.shape[1])
-    Sn = np.minimum(unmixed.shape[0], ref.shape[0])
-    SDR, SIR, SAR, P = bss_eval_sources(ref[: Sn, :Ns, 0], unmixed[: Sn, :Ns])
+    #Sn = np.minimum(unmixed.shape[0], ref.shape[0])
+    #SDR, SIR, SAR, P = bss_eval_sources(unmixed[:, :Ns], ref[:, :Ns, 0])
+    SDR, SIR, SAR, P = bss_eval_sources(ref[:, :Ns, 0], unmixed[:, :Ns])
     # TODO: RMSE was removed because of Singular Matrix error, uncomment for check
     # return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P, 'RMSE': rmse(original, unmixed)}
-    return {'SDR': SDR, 'SIR': SIR, 'SAR': SAR, 'P': P}
+    return {'SDR': np.round(np.mean(SDR), 2), 'SIR': np.round(np.mean(SIR), 2), 'SAR': np.round(np.mean(SAR), 2), 'P': P}
 
 
 def create_folders() -> Tuple[str, str]:
@@ -144,7 +154,7 @@ def create_folders() -> Tuple[str, str]:
     return dir_sims, dir_plots
 
 
-def sim_create_folders(sim: dict, dir_sims: str) -> Tuple[str, str, str, str, str]:
+def sim_create_folders(sim: dict, dir_sims: str) -> Tuple[str, str, str, str, str, str]:
     dir_sim = "{}/{}_{}".format(dir_sims, sim['name'], datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
     # dir_sim = "{}/{}".format(dir_sims, sim['name'])  # without date - easier for development
     if not os.path.isdir(dir_sim):
@@ -166,7 +176,11 @@ def sim_create_folders(sim: dict, dir_sims: str) -> Tuple[str, str, str, str, st
     if not os.path.isdir(dir_sim_plots):
         os.mkdir(dir_sim_plots)
 
-    return dir_sim, dir_sim_filtered, dir_sim_mixed, dir_sim_unmixed, dir_sim_plots
+    dir_sim_box_plots = "{}/box_plots".format(dir_sim)
+    if not os.path.isdir(dir_sim_box_plots):
+        os.mkdir(dir_sim_box_plots)
+
+    return dir_sim, dir_sim_filtered, dir_sim_mixed, dir_sim_unmixed, dir_sim_plots, dir_sim_box_plots
 
 
 def alg_create_folders(alg: dict, dir_sim: str) -> str:

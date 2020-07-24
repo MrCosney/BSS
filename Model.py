@@ -66,6 +66,7 @@ def hexagonal_points(d: float) -> np.ndarray:
 
 def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
     # Get parameters
+    import matplotlib.pyplot as plt
     opts = sim['options']
     N = S.shape[0]  # number of sources
     M = sim['microphones'] if 'microphones' in sim else N  # number of microphones
@@ -82,9 +83,8 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
                        materials=pra.Material(e_absorption),
                        max_order=max_order,
                        sigma2_awgn=opts['sigma2_awgn'])
-
     # Microphone locations for hexagonal array
-    array_loc = np.array([[3], [3], [1]])
+    array_loc = np.array([[3], [2], [0.5]])
     micro_locs = hexagonal_points(sim['microphones_distance'])
     micro_locs += array_loc
 
@@ -97,11 +97,11 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
     R = micro_locs[:, :M]
 
     room.add_microphone_array(pra.MicrophoneArray(R, room.fs))
-
+    #room.add_microphone_array(pra.Beamformer(R, room.fs))
     # Place the sources inside the room
     source_locs = np.array([
-        [3., 2., 1.8],   # source 1
-        [6., 4., 1.8],   # source 2
+        [3., 3, 0.85],   # source 1
+        [3., 1, 0.85],   # source 2
         [2., 4.5, 1.8],  # source 3
     ])
 
@@ -114,7 +114,6 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
     # (according to https://github.com/LCAV/pyroomacoustics/blob/pypi-release/examples/bss_example.py)
     for sig, loc in zip(S, source_locs):
         room.add_source(loc, signal=np.zeros_like(sig))
-
     # Make separate recordings
     filtered = []
     for source, s in zip(room.sources, S):
@@ -132,7 +131,8 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
 
     # Now mixed signals is just the sum
     mixed = np.sum(filtered, axis=0)
-
+    #room.plot(freq=[1000, 2000], img_order=0)
+    #plt.show()
     return filtered, mixed, {'room_object': room}
 
 
@@ -200,6 +200,7 @@ def record_filtered(S: np.ndarray, recorder: Recorder, idxs: list) -> np.ndarray
         rThread.join()
         sThread.join()
         filtered.append(recorder.get_data())
+    t_fist = [filtered[0][:100000], filtered[1][:100000]]
     filtered = np.array(filtered)
 
     return np.array(filtered)

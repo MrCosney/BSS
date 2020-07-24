@@ -158,14 +158,12 @@ def auxiva(mixed: np.array, state: dict, options: dict):
         state['stft'] = stft
     else:
         stft = state['stft']
-
     # Compute stft
     X = stft.analysis(mixed.T)
-
     # Run AUXIVA
     try:
         Y, state['W0'] = pra.bss.auxiva(X,
-                                        n_iter=5,
+                                        n_iter=options['iter'],
                                         W0=state['W0'] if 'W0' in state else None,
                                         return_filters=True)
     except:
@@ -191,7 +189,7 @@ def ILRMA(mixed: np.array, state: dict, options: dict):
     # Run ILRMA
     try:
         Y, state['W0'] = pra.bss.ilrma(X,
-                                       n_iter=5,
+                                       n_iter=10,
                                        W0=state['W0'] if 'W0' in state else None,
                                        return_filters=True,
                                        proj_back=True)

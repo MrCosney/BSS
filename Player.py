@@ -9,7 +9,7 @@ def play(audio: np.array, device_idx):
     stream = p.open(format=
                     pyaudio.paInt16,
                     channels=1,
-                    rate=44100,
+                    rate=16000,
                     output=True,
                     output_device_index=device_idx)
     # read data (based on the chunk size)
@@ -31,7 +31,7 @@ def load_wav(filename, samplerate=44100):
         data = data[:, 0] / 2 + data[:, 1] / 2
 
     # re-interpolate samplerate
-    ratio = float(samplerate) / float(rate)
-    data = resample(data, int(len(data) * ratio))
+    #ratio = float(samplerate) / float(rate)
+    #data = resample(data, int(len(data) * ratio))
 
     return data
