@@ -529,13 +529,13 @@ class aires_online_class:
 
 
 
-def offline_aires_separation(X_mixed):
+def offline_aires_separation(X_mixed, options: dict):
 
     # AIRES BSS Configuration
 
     aires = aires_offline_class()
     aires.maxdelay = 20
-    aires.n_iter = 20       # Number iterations in optimization for full signal
+    aires.n_iter = options['iter']       # Number iterations in optimization for full signal
     aires.do_downsampling_lowpass = True  # do_lowpass
 
     start_timer = time.time()

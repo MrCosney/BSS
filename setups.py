@@ -11,8 +11,8 @@ def setups():
     n_samples = 20000
     time = np.linspace(0, 8, n_samples)
     wav_folder = "Audio/Original"
-    # files = ["1.wav", "2.wav", "3.wav", "4.wav", "5.wav", "6.wav", "7.wav", "8.wav", "9.wav", "10.wav"]
-    files = ["1.wav", "2.wav", "3.wav"]
+    files = ["1.wav", "2.wav", "3.wav", "4.wav", "5.wav"] #"6.wav", "7.wav", "8.wav", "9.wav", "10.wav"]
+    #files = ["1.wav", "2.wav", "3.wav"]
     # files = ["Man.wav", "Woman.wav", "Announcer.wav"]
     data_sets = [
         {
@@ -34,22 +34,31 @@ def setups():
         'options': {'rt60': 0.9, 'room_dim': [6.4, 3.7, 3.4], 'sigma2_awgn': 0, 'volume_gain': 5000},
         'algs': [
             {
-                'name': 'AUXIVA_5', 'func': auxiva, 'state': {}, 'options': {'stft_size': 2048, 'iter': 5}
+                'name': 'AUXIVA_5', 'func': auxiva, 'state': {}, 'options': {'stft_size': 1024, 'iter': 5}
             },
             {
-                 'name': 'AUXIVA_10', 'func': auxiva, 'state': {}, 'options': {'stft_size': 2048, 'iter': 10}
+                'name': 'ILRMA_5', 'func': ILRMA, 'state': {}, 'options': {'stft_size': 1024, 'iter': 5}
             },
             {
-                 'name': 'AUXIVA_50', 'func': auxiva, 'state': {}, 'options': {'stft_size': 2048, 'iter': 50}
+                'name': 'AIRES_5', 'func': AIRES_batch, 'state': {}, 'options': {'iter': 5}
             },
             {
-                'name': 'ILRMA', 'func': ILRMA, 'state': {}, 'options': {'stft_size': 2048}
+                'name': 'AUXIVA_20', 'func': auxiva, 'state': {}, 'options': {'stft_size': 1024, 'iter': 20}
             },
             {
-                 'name': 'AIRES (rtap-opt)', 'func': AIRES_rtap, 'state': {}, 'options': {'type': 'opt'}
+                'name': 'ILRMA_20', 'func': ILRMA, 'state': {}, 'options': {'stft_size': 1024, 'iter': 20}
             },
             {
-                'name': 'AIRES (batch)', 'func': AIRES_batch, 'state': {}, 'options': {}
+                'name': 'AIRES_20', 'func': AIRES_batch, 'state': {}, 'options': {'iter': 20}
+            },
+            {
+                 'name': 'AUXIVA_50', 'func': auxiva, 'state': {}, 'options': {'stft_size': 1024, 'iter': 50}
+            },
+            {
+                'name': 'ILRMA_50', 'func': ILRMA, 'state': {}, 'options': {'stft_size': 1024, 'iter': 50}
+            },
+            {
+                'name': 'AIRES_50', 'func': AIRES_batch, 'state': {}, 'options': {'iter': 50}
             }
         ]
     }

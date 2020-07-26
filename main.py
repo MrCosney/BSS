@@ -51,9 +51,9 @@ def main():
 
             # 4.1. Save filtered & mixed plots
             pr = "{}_".format(data_set['name'])
-            plot_original(S, dir_sim_mixed, pr, S.shape[1])
-            plot_filtered(filtered, dir_sim_filtered, pr, S.shape[1])
-            plot_mixed(mixed, dir_sim_mixed, pr, S.shape[1])
+            #plot_original(S, dir_sim_mixed, pr, S.shape[1])
+            #plot_filtered(filtered, dir_sim_filtered, pr, S.shape[1])
+            #plot_mixed(mixed, dir_sim_mixed, pr, S.shape[1])
 
             # 4.2. Save filtered & mixed to wav
             for file_name, f in zip(data_set['file_names'], filtered):

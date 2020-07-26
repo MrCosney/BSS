@@ -32,7 +32,7 @@ def AIRES_online(mixed, state: dict, options: dict):
 
 
 def AIRES_batch(mixed, state: dict, options: dict):
-    unmixed, p_time = offline_aires_separation(mixed.T)
+    unmixed, p_time = offline_aires_separation(mixed.T, options)
     return unmixed.T, state
 
 
@@ -164,6 +164,7 @@ def auxiva(mixed: np.array, state: dict, options: dict):
     try:
         Y, state['W0'] = pra.bss.auxiva(X,
                                         n_iter=options['iter'],
+                                        n_src=mixed.shape[0],
                                         W0=state['W0'] if 'W0' in state else None,
                                         return_filters=True)
     except:
@@ -189,7 +190,8 @@ def ILRMA(mixed: np.array, state: dict, options: dict):
     # Run ILRMA
     try:
         Y, state['W0'] = pra.bss.ilrma(X,
-                                       n_iter=10,
+                                       n_iter=options['iter'],
+                                       n_src=mixed.shape[0],
                                        W0=state['W0'] if 'W0' in state else None,
                                        return_filters=True,
                                        proj_back=True)
