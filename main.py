@@ -54,9 +54,9 @@ def main():
 
             # 4.1. Save filtered & mixed plots
             pr = "{}_".format(data_set['name'])
-            plot_original(S, dir_sim_mixed, pr, S.shape[1])
-            plot_filtered(filtered, dir_sim_filtered, pr, S.shape[1])
-            plot_mixed(mixed, dir_sim_mixed, pr, S.shape[1])
+            #plot_original(S, dir_sim_mixed, pr, S.shape[1])
+            #plot_filtered(filtered, dir_sim_filtered, pr, S.shape[1])
+            #plot_mixed(mixed, dir_sim_mixed, pr, S.shape[1])
 
             # 4.2. Save filtered & mixed to wav
             for file_name, f in zip(data_set['file_names'], filtered):
@@ -76,15 +76,15 @@ def main():
             SIR_temp = []
             SAR_temp = []
             # 5. Run algorithms
-            print('\t\t\033[35mSeparating...\033[0m')
+
+            print('\t\t\033[35mSeparating {}...\033[0m'.format('(chunk_size={})'.format(sim['chunk_size']) if 'chunk_size' in sim else ''))
             for alg in sim['algs']:
 
                 if alg['name'].find('ILRMA') == 0 and data_set['name'] == 'Gen Signals':
                     print('Warning: artificially generated signals are not used with ILRMA, skipping...')
                     continue
 
-                print("\t\t\tSeparation by {} in simulation {} with chunk_size={} ..."
-                      .format(alg['name'], sim['name'], sim['chunk_size'] if 'chunk_size' in sim else '-'))
+                print("\t\t\tSeparation by {} ...".format(alg['name']))
 
                 # 5.1 Run given algorithm (online or batch)
                 if sim['run_type'] == 'online':

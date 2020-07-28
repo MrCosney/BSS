@@ -17,11 +17,11 @@ def AIRES_new_online(mixed, state: dict, options: dict):
         aires = state['aires']
     else:
         aires = aires_online_class()
-        aires.maxdelay = options['maxdelay'] if 'maxdelay' in options else 20
+        aires.maxdelay = options['max_delay'] if 'max_delay' in options else 20
         # Number of previous blocks in memory
-        aires.n_blocks_signal_memory = options['n_blocks_signal_memory'] if 'n_blocks_signal_memory' in options else 1
+        aires.n_blocks_signal_memory = options['blocks_memory'] if 'blocks_memory' in options else 1
         aires.Blocksize = mixed.shape[1]  # Size of the processed block
-        aires.n_iter_pro_block = options['n_iter_pro_block'] if 'n_iter_pro_block' in options else 2
+        aires.n_iter_pro_block = options['iter_p_block'] if 'iter_p_block' in options else 2
         aires.reset_parameters()
 
     state['aires'] = aires
@@ -33,7 +33,7 @@ def AIRES_new_online(mixed, state: dict, options: dict):
 
 
 def AIRES_new_offline(mixed, state: dict, options: dict):
-    unmixed, p_time = offline_aires_separation(mixed.T)
+    unmixed, p_time = offline_aires_separation(mixed.T, options)
     return unmixed.T, state
 
 
@@ -165,6 +165,7 @@ def AuxIVA(mixed: np.array, state: dict, options: dict):
     try:
         Y, state['W0'] = pra.bss.auxiva(X,
                                         n_iter=options['iter'],
+                                        n_src=mixed.shape[0],
                                         W0=state['W0'] if 'W0' in state else None,
                                         return_filters=True)
     except:
@@ -192,6 +193,7 @@ def ILRMA(mixed: np.array, state: dict, options: dict):
         Y, state['W0'] = pra.bss.ilrma(X,
                                        n_iter=options['iter'],
                                        n_components=options['nBases'],
+                                       n_src=mixed.shape[0],
                                        W0=state['W0'] if 'W0' in state else None,
                                        return_filters=True,
                                        proj_back=True)

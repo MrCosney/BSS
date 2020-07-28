@@ -144,10 +144,12 @@ def plot_sim_data_set_metrics(sim: dict, data_set: dict, dir_sim_plots: str):
         plt.xticks(np.arange(len(x)), x, rotation=45)
         plt.savefig("{}/{}.pdf".format(dir_sim_plots_type, metric_name))
 
+
 def plot_boxes(SDR, SAR, SIR, sim_name, dir_sim_box_plots):
     """Plot box-plots for all sim for presentations"""
 
-    labels=  ['AUXIVA_5', 'AUXIVA_10', 'AUXIVA_50', 'ILRMA', 'AIRES (rtap-opt)', 'AIRES (batch)']
+    # ToDo: use names from setups =)
+    labels = ['AUXIVA_5', 'ILRMA_5', 'AIRES_5', 'AUXIVA_20', 'ILRMA_20', 'AIRES_20', 'AUXIVA_50', 'ILRMA_50', 'AIRES_50']
     names = {'SDR': SDR, 'SAR': SAR, 'SIR': SIR}
     for name, value in names.items():
         var = []
@@ -161,12 +163,9 @@ def plot_boxes(SDR, SAR, SIR, sim_name, dir_sim_box_plots):
             var.append(z)
         fig, ax = plt.subplots()
         fig.set_size_inches(9, 6)
-        #plt.figure(figsize=(12, 8))
+        ax.grid()
+        ax.set_ylim([np.min(value) -3, np.max(value) + 2])
         ax.set_title(sim_name, fontsize=16, fontweight="bold")
         ax.set_ylabel("".join((name, ",[dB]")), fontsize=12, fontweight="bold")
         ax.boxplot(var, labels=labels[:len(SDR[0])])
         plt.savefig("{}/{}.pdf".format(dir_sim_box_plots, name))
-
-
-
-

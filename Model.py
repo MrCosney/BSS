@@ -102,7 +102,7 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
     source_locs = np.array([
         [3., 3, 0.85],   # source 1
         [3., 1, 0.85],   # source 2
-        [2., 4.5, 1.8],  # source 3
+        [5., 2, 0.85],  # source 3
     ])
 
     # Check that required number of microphones has it's locations
@@ -115,6 +115,12 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
     for sig, loc in zip(S, source_locs):
         room.add_source(loc, signal=np.zeros_like(sig))
     # Make separate recordings
+
+    #room.plot_rir()
+    #fig = plt.gcf()
+    #fig.set_size_inches(9, 6)
+    #plt.show()
+
     filtered = []
     for source, s in zip(room.sources, S):
         # Set only one of the signals

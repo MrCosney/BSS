@@ -5,8 +5,8 @@ from pathlib import Path
 
 def setups():
     wav_folder = "Audio/Original"
-    files = ["1.wav", "2.wav", "3.wav", "4.wav", "5.wav", "6.wav", "7.wav", "8.wav", "9.wav", "10.wav"]
-    # files = ["1.wav", "2.wav"]
+    # files = ["1.wav", "2.wav", "3.wav", "4.wav", "5.wav", "6.wav", "7.wav", "8.wav", "9.wav", "10.wav"]
+    files = ["1.wav", "2.wav"]
     # files = ["Man.wav", "Woman.wav", "Announcer.wav"]
     data_sets = [
         {
@@ -29,7 +29,8 @@ def setups():
                                                                                   'iter': 100}},
      {'name': 'AUXIVA (Pyroom)',  'func': AuxIVA,        'state': {}, 'options': {'stft_size': 256,
                                                                                   'iter': 100}},
-     {'name': 'AIRES (offline)',  'func': AIRES_new_offline, 'state': {}, 'options': {}}
+     {'name': 'AIRES (offline)',  'func': AIRES_new_offline, 'state': {}, 'options': {'max_delay': 20,
+                                                                                      'iter': 30}}
     ]
 
     # Online algorithms - those that are used for online (chunk-by-chunk) simulations
@@ -44,7 +45,9 @@ def setups():
                                                                                      'iter': 10}},
         {'name': 'AUXIVA (Pyroom)',  'func': AuxIVA,        'state': {}, 'options': {'stft_size': 256,
                                                                                      'iter': 10}},
-        {'name': 'AIRES (online)', 'func': AIRES_new_online, 'state': {}, 'options': {}}
+        {'name': 'AIRES (online)', 'func': AIRES_new_online, 'state': {}, 'options': {'max_delay': 20,
+                                                                                      'iter_p_block': 2,
+                                                                                      'blocks_memory': 1}}
     ]
 
     # Environment (room) options for convolutive simulations
@@ -57,6 +60,9 @@ def setups():
 
     # Distance between microphones [m]
     mic_dist = 0.05
+
+    # Chunk size for online simulations
+    chunk_size = 2048
 
     # Convolutive, batch, for 2 microphones
     sim_batch_2 = {
@@ -80,7 +86,7 @@ def setups():
         'microphones': 2,
         'microphones_distance': mic_dist,
         'data_sets': data_sets,
-        'chunk_size': 2048,
+        'chunk_size': chunk_size,
         'env_options': env_options,
         'algs': algs_onln
     }
@@ -93,7 +99,7 @@ def setups():
         'microphones': 2,
         'microphones_distance': mic_dist,
         'data_sets': data_sets,
-        'chunk_size': 2048,
+        'chunk_size': chunk_size,
         'env_options': env_options,
         'algs': algs_batch
     }
@@ -106,7 +112,7 @@ def setups():
         'microphones': 2,
         'microphones_distance': mic_dist,
         'data_sets': data_sets,
-        'chunk_size': 2048,
+        'chunk_size': chunk_size,
         'env_options': env_options,
         'algs': algs_onln
     }

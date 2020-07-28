@@ -529,13 +529,13 @@ class aires_online_class:
 
 
 
-def offline_aires_separation(X_mixed):
+def offline_aires_separation(X_mixed, options: dict):
 
     # AIRES BSS Configuration
 
     aires = aires_offline_class()
-    aires.maxdelay = 20
-    aires.n_iter = 20       # Number iterations in optimization for full signal
+    aires.maxdelay = options['max_delay']
+    aires.n_iter = options['iter']       # Number iterations in optimization for full signal
     aires.do_downsampling_lowpass = True  # do_lowpass
 
     start_timer = time.time()
@@ -546,15 +546,15 @@ def offline_aires_separation(X_mixed):
 
 
 
-def online_aires_separation(X_mixed):
+def online_aires_separation(X_mixed, options: dict):
 
     # AIRES BSS Configuration
 
     aires = aires_online_class()
-    aires.maxdelay = 20
+    aires.maxdelay = options['max_delay']
     aires.n_blocks_signal_memory = 4    # Number of previous blocks in memory
     aires.Blocksize = 512               # Size of the processed block
-    aires.n_iter_pro_block = 2          # Number iterations per block
+    aires.n_iter_pro_block = options['iter']          # Number iterations per block
     aires.reset_parameters()
 
     # Number integer blocks in audio signal
