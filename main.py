@@ -8,11 +8,14 @@ from mir_eval.separation import bss_eval_sources
 
 from datetime import datetime
 from typing import Tuple
-import numpy.linalg as nl
 
 
 def main():
-    SDRR, SARR, SIRR, sims, data_sets = setups()
+    sims, data_sets = setups()
+
+    SDRR = []
+    SARR = []
+    SIRR = []
 
     dir_sims, dir_plots = create_folders()
 

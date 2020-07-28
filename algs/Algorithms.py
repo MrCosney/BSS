@@ -8,9 +8,10 @@ from algs.aires.AIRES_old import shullers_method
 import scipy.optimize as opt
 from algs.aires.AIRES_rtap import lp_filter_and_downsample, find_coeffs_optimization, cost_n_abs_kl, unmixing
 from algs.aires.aires_bss_lib_classes import offline_aires_separation, aires_online_class
+from MatlabUtils import *
 
 
-def AIRES_online(mixed, state: dict, options: dict):
+def AIRES_new_online(mixed, state: dict, options: dict):
     # Get aires object
     if 'aires' in state:
         aires = state['aires']
@@ -31,12 +32,12 @@ def AIRES_online(mixed, state: dict, options: dict):
     return unmixed.T, state
 
 
-def AIRES_batch(mixed, state: dict, options: dict):
+def AIRES_new_offline(mixed, state: dict, options: dict):
     unmixed, p_time = offline_aires_separation(mixed.T)
     return unmixed.T, state
 
 
-def AIRES_rtap(mixed, state: dict, options: dict):
+def AIRES_old_offline(mixed, state: dict, options: dict):
     if mixed.shape[0] < 2:
         raise ValueError('AIRES_rtap -> at least 2 channels needed for separation')
 
@@ -151,7 +152,7 @@ def FastICA(mixed: np.array, state: dict, options: dict):
     # TODO: Оба алгоритма ниже практически одинаковы,но пока не переносил в единую функцию, с выбором алогритма по имени
     # возможно какие то параметры будуем менять у каждого отдельно.
 
-def auxiva(mixed: np.array, state: dict, options: dict):
+def AuxIVA(mixed: np.array, state: dict, options: dict):
     # Get STFT object
     if 'stft' not in state:
         stft = create_stft(mixed.shape[0], options)
@@ -189,7 +190,8 @@ def ILRMA(mixed: np.array, state: dict, options: dict):
     # Run ILRMA
     try:
         Y, state['W0'] = pra.bss.ilrma(X,
-                                       n_iter=10,
+                                       n_iter=options['iter'],
+                                       n_components=options['nBases'],
                                        W0=state['W0'] if 'W0' in state else None,
                                        return_filters=True,
                                        proj_back=True)
@@ -202,8 +204,48 @@ def ILRMA(mixed: np.array, state: dict, options: dict):
     return unmixed, state
 
 
+def ILRMA_MATLAB(mixed: np.array, state: dict, options: dict):
+    engine = find_engine()
+    if 'W0' in state:
+        unmixed_m, W0 = engine.ilrma_bss(matlab.double(initializer=mixed.T.tolist(), is_complex=True),
+                                         float(options['iter']),
+                                         float(options['stft_size']),
+                                         float(options['nBases']),
+                                         matlab.double(initializer=state['W0'].tolist(), is_complex=True),
+                                         nargout=2)
+    else:
+        unmixed_m, W0 = engine.ilrma_bss(matlab.double(initializer=mixed.T.tolist(), is_complex=True),
+                                         float(options['iter']),
+                                         float(options['stft_size']),
+                                         float(options['nBases']),
+                                         nargout=2)
+
+    state['W0'] = np.asarray(W0)
+    return np.asarray(unmixed_m).T, state
+
+
+def AuxIVA_MATLAB(mixed: np.array, state: dict, options: dict):
+    engine = find_engine()
+    if 'W0' in state:
+        unmixed_m, W0 = engine.auxiva_bss(matlab.double(initializer=mixed.T.tolist(), is_complex=True),
+                                          float(options['iter']),
+                                          float(options['stft_size']),
+                                          matlab.double(initializer=state['W0'].tolist(), is_complex=True),
+                                          nargout=2)
+    else:
+        unmixed_m, W0 = engine.auxiva_bss(matlab.double(initializer=mixed.T.tolist(), is_complex=True),
+                                          float(options['iter']),
+                                          float(options['stft_size']),
+                                          nargout=2)
+
+    state['W0'] = np.asarray(W0)
+
+    return np.asarray(unmixed_m).T, state
+
+
 def create_stft(M: int, options: dict):
     L = options['stft_size']
     hop = L // 2
-    window = pra.hann(L, flag='asymmetric', length='full')
+    # window = pra.hann(L, flag='asymmetric', length='full')
+    window = pra.hamming(L, flag='asymmetric', length='full')  # looks like hamming window is better
     return pra.transform.STFT(L, hop=hop, analysis_window=window, channels=M)

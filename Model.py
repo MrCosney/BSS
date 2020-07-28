@@ -67,7 +67,7 @@ def hexagonal_points(d: float) -> np.ndarray:
 def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
     # Get parameters
     import matplotlib.pyplot as plt
-    opts = sim['options']
+    opts = sim['env_options']
     N = S.shape[0]  # number of sources
     M = sim['microphones'] if 'microphones' in sim else N  # number of microphones
 
