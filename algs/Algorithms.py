@@ -9,9 +9,18 @@ import scipy.optimize as opt
 from algs.aires.AIRES_rtap import lp_filter_and_downsample, find_coeffs_optimization, cost_n_abs_kl, unmixing
 from algs.aires.aires_bss_lib_classes import offline_aires_separation, aires_online_class
 from MatlabUtils import *
+import warnings
 
 
 def AIRES_new_online(mixed, state: dict, options: dict):
+    nSources = options['nSources']
+
+    # Check number of sources to be equal to 2
+    if nSources > 2:
+        warnings.warn('AIRES (online) is implemented only for 2 sources (instead=%d was requested)'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
     # Get aires object
     if 'aires' in state:
         aires = state['aires']
@@ -27,19 +36,33 @@ def AIRES_new_online(mixed, state: dict, options: dict):
     state['aires'] = aires
 
     # Unmixing
-    unmixed, p_time = aires.aires_online_separation(mixed[0:2, :].T, rt60=0.2)
+    unmixed, p_time = aires.aires_online_separation(mixed[:nSources, :].T, rt60=0.2)
 
     return unmixed.T, state
 
 
 def AIRES_new_offline(mixed, state: dict, options: dict):
-    unmixed, p_time = offline_aires_separation(mixed.T, options)
+    nSources = options['nSources']
+
+    # Check number of sources to be equal to 2
+    if nSources > 2:
+        warnings.warn('AIRES (offline) is implemented only for 2 sources (instead=%d was requested)'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    nSources = options['nSources']
+    unmixed, p_time = offline_aires_separation(mixed[:nSources, :].T, options)
     return unmixed.T, state
 
 
 def AIRES_old_offline(mixed, state: dict, options: dict):
+    # Get options
+    nSources = options['nSources']
+
     if mixed.shape[0] < 2:
-        raise ValueError('AIRES_rtap -> at least 2 channels needed for separation')
+        warnings.warn('at least 2 channels needed for separation (instead=%d was given)'
+                      .format(mixed.shape[0]))
+        return np.zeros((nSources, mixed.shape[1])), state
 
     # ESTIMATION ====>
 
@@ -75,7 +98,9 @@ def AIRES_old_offline(mixed, state: dict, options: dict):
         # Update coeffs
         coeffs = coeffs - 0.1 * gradient
     else:
-        raise ValueError("AIRES_rtap -> you have to specify valid type (\'opt\' or \'grad\')")
+        warnings.warn('unsupported type=%s - you have to specify valid type (\'opt\' or \'grad\')'
+                      .format(options['type']))
+        return np.zeros((nSources, mixed.shape[1])), state
 
     # Update low-pass filter states
     if filter_state_0_lp is None or filter_state_1_lp is None:
@@ -108,8 +133,13 @@ def AIRES_old_offline(mixed, state: dict, options: dict):
 
 
 def AIRES_old(mixed, state: dict, options: dict):
+    # Get options
+    nSources = options['nSources']
+
     if mixed.shape[0] < 2:
-        raise ValueError('AIRES_old -> at least 2 channels needed for separation')
+        warnings.warn('at least 2 channels needed for separation (instead=%d was given)'
+                      .format(mixed.shape[0]))
+        return np.zeros((nSources, mixed.shape[1])), state
 
     return shullers_method(mixed, state, options)
 
@@ -154,22 +184,21 @@ def FastICA(mixed: np.array, state: dict, options: dict):
 
 def AuxIVA(mixed: np.array, state: dict, options: dict):
     # Get STFT object
+    nSources = options['nSources']
     if 'stft' not in state:
-        stft = create_stft(mixed.shape[0], options)
+        stft = create_stft(nSources, options)
         state['stft'] = stft
     else:
         stft = state['stft']
     # Compute stft
-    X = stft.analysis(mixed.T)
+    X = stft.analysis(mixed[:nSources, :].T)
+
     # Run AUXIVA
-    try:
-        Y, state['W0'] = pra.bss.auxiva(X,
-                                        n_iter=options['iter'],
-                                        n_src=mixed.shape[0],
-                                        W0=state['W0'] if 'W0' in state else None,
-                                        return_filters=True)
-    except:
-        return mixed, state
+    Y, state['W0'] = pra.bss.auxiva(X,
+                                    n_iter=options['iter'],
+                                    n_src=nSources,
+                                    W0=state['W0'] if 'W0' in state else None,
+                                    return_filters=True)
 
     # Compute unmixed data
     unmixed = stft.synthesis(Y).T
@@ -179,26 +208,24 @@ def AuxIVA(mixed: np.array, state: dict, options: dict):
 
 def ILRMA(mixed: np.array, state: dict, options: dict):
     # Get STFT object
+    nSources = options['nSources']
     if 'stft' not in state:
-        stft = create_stft(mixed.shape[0], options)
+        stft = create_stft(nSources, options)
         state['stft'] = stft
     else:
         stft = state['stft']
 
     # Compute stft
-    X = stft.analysis(mixed.T)
+    X = stft.analysis(mixed[:nSources, :].T)
 
     # Run ILRMA
-    try:
-        Y, state['W0'] = pra.bss.ilrma(X,
-                                       n_iter=options['iter'],
-                                       n_components=options['nBases'],
-                                       n_src=mixed.shape[0],
-                                       W0=state['W0'] if 'W0' in state else None,
-                                       return_filters=True,
-                                       proj_back=True)
-    except:
-        return mixed, state
+    Y, state['W0'] = pra.bss.ilrma(X,
+                                   n_iter=options['iter'],
+                                   n_src=nSources,
+                                   n_components=options['nBases'],
+                                   W0=state['W0'] if 'W0' in state else None,
+                                   return_filters=True,
+                                   proj_back=True)
 
     # Compute unmixed data
     unmixed = stft.synthesis(Y).T
@@ -206,13 +233,26 @@ def ILRMA(mixed: np.array, state: dict, options: dict):
     return unmixed, state
 
 
+def SECSI(X: np.ndarray, d: int, heur: str) -> list:
+    engine = find_engine()
+
+    F = engine.SECSI(matlab.double(initializer=X.tolist(), is_complex=np.iscomplex(X)),
+                     int(d),
+                     str(heur),
+                     nargout=1)
+
+    return F
+
+
 def ILRMA_MATLAB(mixed: np.array, state: dict, options: dict):
     engine = find_engine()
+    nSources = options['nSources']
     if 'W0' in state:
         unmixed_m, W0 = engine.ilrma_bss(matlab.double(initializer=mixed.T.tolist(), is_complex=True),
                                          float(options['iter']),
                                          float(options['stft_size']),
                                          float(options['nBases']),
+                                         int(nSources),
                                          matlab.double(initializer=state['W0'].tolist(), is_complex=True),
                                          nargout=2)
     else:
@@ -220,6 +260,7 @@ def ILRMA_MATLAB(mixed: np.array, state: dict, options: dict):
                                          float(options['iter']),
                                          float(options['stft_size']),
                                          float(options['nBases']),
+                                         int(nSources),
                                          nargout=2)
 
     state['W0'] = np.asarray(W0)
@@ -228,14 +269,15 @@ def ILRMA_MATLAB(mixed: np.array, state: dict, options: dict):
 
 def AuxIVA_MATLAB(mixed: np.array, state: dict, options: dict):
     engine = find_engine()
+    nSources = options['nSources']
     if 'W0' in state:
-        unmixed_m, W0 = engine.auxiva_bss(matlab.double(initializer=mixed.T.tolist(), is_complex=True),
+        unmixed_m, W0 = engine.auxiva_bss(matlab.double(initializer=mixed[:nSources, :].T.tolist(), is_complex=True),
                                           float(options['iter']),
                                           float(options['stft_size']),
                                           matlab.double(initializer=state['W0'].tolist(), is_complex=True),
                                           nargout=2)
     else:
-        unmixed_m, W0 = engine.auxiva_bss(matlab.double(initializer=mixed.T.tolist(), is_complex=True),
+        unmixed_m, W0 = engine.auxiva_bss(matlab.double(initializer=mixed[:nSources, :].T.tolist(), is_complex=True),
                                           float(options['iter']),
                                           float(options['stft_size']),
                                           nargout=2)
@@ -251,3 +293,251 @@ def create_stft(M: int, options: dict):
     # window = pra.hann(L, flag='asymmetric', length='full')
     window = pra.hamming(L, flag='asymmetric', length='full')  # looks like hamming window is better
     return pra.transform.STFT(L, hop=hop, analysis_window=window, channels=M)
+
+
+def Beamformer_Perceptual(mixed: np.array, state: dict, options: dict):
+    # Get options
+    nSources = options['nSources']
+    stft_size = options['stft_size'] if 'stft_size' in options else 1024
+    delay = options['delay'] if 'delay' in options else 0.05
+    nPaths = options['nPaths'] if 'nPaths' in options else 1
+    FD = options['FD'] if 'FD' in options else False
+
+    if 'room_object' in options:
+        room = options['room_object']
+    else:
+        warnings.warn('room_object is required in algorithm options for beamforming'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    fs = room.fs
+
+    # Check number of sources to be equal to 2
+    if nSources != 2:
+        warnings.warn('Perceptual beamformer is implemented only for 2 sources (instead=%d was requested)'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    # Create beamformer object
+    bmfr = pra.Beamformer(room.mic_array.R, fs, N=stft_size)
+
+    # "Record" mixed data with beamformer
+    bmfr.record(mixed, fs)
+
+    # Create filters that point to source 1
+    bmfr.rake_perceptual_filters(
+        room.sources[0][0:nPaths],
+        room.sources[1][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s1 = bmfr.process(FD)
+
+    # Create filters that point to source 2
+    bmfr.rake_perceptual_filters(
+        room.sources[1][0:nPaths],
+        room.sources[0][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s2 = bmfr.process(FD)
+
+    return np.stack([s1, s2], axis=0), state
+
+
+def Beamformer_MVDR(mixed: np.array, state: dict, options: dict):
+    # Get options
+    nSources = options['nSources']
+    stft_size = options['stft_size'] if 'stft_size' in options else 1024
+    delay = options['delay'] if 'delay' in options else 0.05
+    nPaths = options['nPaths'] if 'nPaths' in options else 1
+    FD = options['FD'] if 'FD' in options else False
+
+    if 'room_object' in options:
+        room = options['room_object']
+    else:
+        warnings.warn('room_object is required in algorithm options for beamforming'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    fs = room.fs
+
+    # Check number of sources to be equal to 2
+    if nSources != 2:
+        warnings.warn('Perceptual beamformer is implemented only for 2 sources (instead=%d was requested)'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    # Create beamformer object
+    bmfr = pra.Beamformer(room.mic_array.R, fs, N=stft_size)
+
+    # "Record" mixed data with beamformer
+    bmfr.record(mixed, fs)
+
+    # Create filters that point to source 1
+    bmfr.rake_mvdr_filters(
+        room.sources[0][0:nPaths],
+        room.sources[1][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s1 = bmfr.process(FD)
+
+    # Create filters that point to source 2
+    bmfr.rake_mvdr_filters(
+        room.sources[1][0:nPaths],
+        room.sources[0][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s2 = bmfr.process(FD)
+
+    return np.stack([s1, s2], axis=0), state
+
+
+def Beamformer_Distortionless(mixed: np.array, state: dict, options: dict):
+    # Get options
+    nSources = options['nSources']
+    stft_size = options['stft_size'] if 'stft_size' in options else 1024
+    delay = options['delay'] if 'delay' in options else 0.05
+    nPaths = options['nPaths'] if 'nPaths' in options else 1
+    FD = options['FD'] if 'FD' in options else False
+
+    if 'room_object' in options:
+        room = options['room_object']
+    else:
+        warnings.warn('room_object is required in algorithm options for beamforming'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    fs = room.fs
+
+    # Check number of sources to be equal to 2
+    if nSources != 2:
+        warnings.warn('Perceptual beamformer is implemented only for 2 sources (instead=%d was requested)'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    # Create beamformer object
+    bmfr = pra.Beamformer(room.mic_array.R, fs, N=stft_size)
+
+    # "Record" mixed data with beamformer
+    bmfr.record(mixed, fs)
+
+    # Create filters that point to source 1
+    bmfr.rake_distortionless_filters(
+        room.sources[0][0:nPaths],
+        room.sources[1][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s1 = bmfr.process(FD)
+
+    # Create filters that point to source 2
+    bmfr.rake_distortionless_filters(
+        room.sources[1][0:nPaths],
+        room.sources[0][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s2 = bmfr.process(FD)
+
+    return np.stack([s1, s2], axis=0), state
+
+
+def Beamformer_Max_UDR(mixed: np.array, state: dict, options: dict):
+    # Get options
+    nSources = options['nSources']
+    stft_size = options['stft_size'] if 'stft_size' in options else 1024
+    delay = options['delay'] if 'delay' in options else 0.05
+    nPaths = options['nPaths'] if 'nPaths' in options else 1
+    FD = options['FD'] if 'FD' in options else False
+
+    if 'room_object' in options:
+        room = options['room_object']
+    else:
+        warnings.warn('room_object is required in algorithm options for beamforming'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    fs = room.fs
+
+    # Check number of sources to be equal to 2
+    if nSources != 2:
+        warnings.warn('Perceptual beamformer is implemented only for 2 sources (instead=%d was requested)'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    # Create beamformer object
+    bmfr = pra.Beamformer(room.mic_array.R, fs, N=stft_size)
+
+    # "Record" mixed data with beamformer
+    bmfr.record(mixed, fs)
+
+    # Create filters that point to source 1
+    bmfr.rake_max_udr_filters(
+        room.sources[0][0:nPaths],
+        room.sources[1][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s1 = bmfr.process(FD)
+
+    # Create filters that point to source 2
+    bmfr.rake_max_udr_filters(
+        room.sources[1][0:nPaths],
+        room.sources[0][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M),
+        delay=delay
+    )
+    s2 = bmfr.process(FD)
+
+    return np.stack([s1, s2], axis=0), state
+
+
+def Beamformer_Delay_And_Sum(mixed: np.array, state: dict, options: dict):
+    # Get options
+    nSources = options['nSources']
+    stft_size = options['stft_size'] if 'stft_size' in options else 1024
+    nPaths = options['nPaths'] if 'nPaths' in options else 1
+    FD = options['FD'] if 'FD' in options else False
+
+    if 'room_object' in options:
+        room = options['room_object']
+    else:
+        warnings.warn('room_object is required in algorithm options for beamforming'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    fs = room.fs
+
+    # Check number of sources to be equal to 2
+    if nSources != 2:
+        warnings.warn('Perceptual beamformer is implemented only for 2 sources (instead=%d was requested)'
+                      .format(nSources))
+        return np.zeros((nSources, mixed.shape[1])), state
+
+    # Create beamformer object
+    bmfr = pra.Beamformer(room.mic_array.R, fs, N=stft_size)
+
+    # "Record" mixed data with beamformer
+    bmfr.record(mixed, fs)
+
+    # Create filters that point to source 1
+    bmfr.rake_delay_and_sum_weights(
+        room.sources[0][0:nPaths],
+        room.sources[1][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M)
+    )
+    s1 = bmfr.process(FD)
+
+    # Create filters that point to source 2
+    bmfr.rake_delay_and_sum_weights(
+        room.sources[1][0:nPaths],
+        room.sources[0][0:nPaths],
+        room.sigma2_awgn * np.eye(bmfr.Lg * bmfr.M)
+    )
+    s2 = bmfr.process(FD)
+
+    return np.stack([s1, s2], axis=0), state
+

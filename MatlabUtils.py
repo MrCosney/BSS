@@ -24,6 +24,7 @@ def find_engine():
 
     engine.addpath('amsbss/ILRMA')
     engine.addpath('amsbss/AuxIVA')
+    engine.addpath('amsbss/AuxIVA/STFT')
     return engine
 
 

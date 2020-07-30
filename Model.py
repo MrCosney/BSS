@@ -6,6 +6,7 @@ from typing import Tuple
 from RecorderClass import Recorder
 import threading
 from Player import play
+import matplotlib.pyplot as plt
 
 
 def mix(s_input: np.ndarray, sim: dict, data_set: dict):
@@ -54,19 +55,8 @@ def mix_linear(S: np.ndarray, sim: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
     return filtered, mixed, {'mixing_matrix': A}
 
 
-def hexagonal_points(d: float) -> np.ndarray:
-    return d * np.array([[-1, 0, 0],
-                         [-1 / 2, 3 ** 0.5 / 2, 0],
-                         [-1 / 2, -3 ** 0.5 / 2, 0],
-                         [0, 0, 0],
-                         [1 / 2, 3 ** 0.5 / 2, 0],
-                         [1 / 2, -3 ** 0.5 / 2, 0],
-                         [1, 0, 0]]).T
-
-
 def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray, np.ndarray, dict]:
     # Get parameters
-    import matplotlib.pyplot as plt
     opts = sim['env_options']
     N = S.shape[0]  # number of sources
     M = sim['microphones'] if 'microphones' in sim else N  # number of microphones
@@ -84,12 +74,10 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
                        max_order=max_order,
                        sigma2_awgn=opts['sigma2_awgn'])
     # Microphone locations for hexagonal array
-    array_loc = np.array([[3], [2], [0.5]])
-    micro_locs = hexagonal_points(sim['microphones_distance'])
-    micro_locs += array_loc
+    micro_locs = opts['micro_locations']
 
     # Check that required number of microphones has it's locations
-    if micro_locs.shape[0] < M:
+    if micro_locs.shape[1] < M:
         raise ValueError('{} microphones required, but only {} microphone locations specified'
                          .format(M, micro_locs.shape[0]))
 
@@ -97,13 +85,8 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
     R = micro_locs[:, :M]
 
     room.add_microphone_array(pra.MicrophoneArray(R, room.fs))
-    # room.add_microphone_array(pra.Beamformer(R, room.fs))
     # Place the sources inside the room
-    source_locs = np.array([
-        [3., 3, 0.85],   # source 1
-        [3., 1, 0.85],   # source 2
-        [5., 2, 0.85],  # source 3
-    ])
+    source_locs = opts['source_locations']
 
     # Check that required number of microphones has it's locations
     if source_locs.shape[0] < N:
@@ -116,10 +99,10 @@ def mix_convolutive(S: np.array, sim: dict, data_set: dict) -> Tuple[np.ndarray,
         room.add_source(loc, signal=np.zeros_like(sig))
     # Make separate recordings
 
-    #room.plot_rir()
-    #fig = plt.gcf()
-    #fig.set_size_inches(9, 6)
-    #plt.show()
+    # room.plot_rir()
+    # fig = plt.gcf()
+    # fig.set_size_inches(9, 6)
+    # plt.show()
 
     filtered = []
     for source, s in zip(room.sources, S):

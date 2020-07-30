@@ -5,10 +5,10 @@ import copy
 
 def form_source_matrix(S_input: list) -> np.ndarray:
     S = copy.deepcopy(S_input)
-    l_max = max(len(s) for s in S)
+    l_min = min(len(s) for s in S)
 
     for s in S:
-        s.resize((1, l_max), refcheck=False)
+        s.resize((1, l_min), refcheck=False)
 
     return np.vstack(S)
 
@@ -25,7 +25,8 @@ def normalize(s: np.ndarray) -> np.ndarray:
     # span = np.max(s) - np.min(s)
     # span = 1 if span == 0 else span  # safety check to avoid division by zero
     # s = ((s - np.min(s)) * 2) / span - 1
-    return s / np.max(np.abs(s))
+    max_v = np.max(np.abs(s))
+    return s / np.max(np.abs(s)) if max_v > 0 else s
 
 
 def normalize_old(S: np.ndarray) -> np.ndarray:

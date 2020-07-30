@@ -44,6 +44,17 @@ def main():
             print('\t\t\033[35mMixing signals...\033[0m')
             filtered, mixed, sim = mix(S, sim, data_set)
 
+            # Check rir
+            # room = sim['mix_additional_outputs']['room_object']
+            # L = min([min(map(len, x)) for x in room.rir])
+            # rir = room.rir
+            # for mrs in rir:
+            #     for sr in mrs:
+            #         sr.resize((L,), refcheck=False)
+            # rir = np.array(rir)
+            # engine = find_engine()
+            # engine.check_rir(matlab.double(initializer=rir.tolist(), is_complex=True))
+
             # 4. Normalize filtered & mixed arrays
             mixed = normalize(mixed)
             for f in filtered:
@@ -54,9 +65,9 @@ def main():
 
             # 4.1. Save filtered & mixed plots
             pr = "{}_".format(data_set['name'])
-            #plot_original(S, dir_sim_mixed, pr, S.shape[1])
-            #plot_filtered(filtered, dir_sim_filtered, pr, S.shape[1])
-            #plot_mixed(mixed, dir_sim_mixed, pr, S.shape[1])
+            plot_original(S, dir_sim_mixed, pr, S.shape[1])
+            plot_filtered(filtered, dir_sim_filtered, pr, S.shape[1])
+            plot_mixed(mixed, dir_sim_mixed, pr, S.shape[1])
 
             # 4.2. Save filtered & mixed to wav
             for file_name, f in zip(data_set['file_names'], filtered):
@@ -79,6 +90,14 @@ def main():
 
             print('\t\t\033[35mSeparating {}...\033[0m'.format('(chunk_size={})'.format(sim['chunk_size']) if 'chunk_size' in sim else ''))
             for alg in sim['algs']:
+
+                # Make room object available for algorithms (needed for beamforming)
+                if 'mix_additional_outputs' in sim:
+                    if 'room_object' in sim['mix_additional_outputs']:
+                        alg['options']['room_object'] = sim['mix_additional_outputs']['room_object']
+
+                # Make number of sources required available to algorithms
+                alg['options']['nSources'] = sim['sources']
 
                 if alg['name'].find('ILRMA') == 0 and data_set['name'] == 'Gen Signals':
                     print('Warning: artificially generated signals are not used with ILRMA, skipping...')
