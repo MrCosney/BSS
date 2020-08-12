@@ -1,3 +1,5 @@
 [submodule "amsbss"]
 	path = amsbss
 	url = https://github.com/TUIlmenauAMS/Comparison-of-Blind-Source-Separation-techniques.git
+[submodule "git@github.com:podkiva/Comparison-of-Blind-Source-Separation-techniques.git"]
+	url = amsbss
